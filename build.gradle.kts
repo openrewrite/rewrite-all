@@ -1,105 +1,29 @@
-import nebula.plugin.contacts.Contact
-import nebula.plugin.contacts.ContactsExtension
-
 plugins {
-    `java-library`
-
-    id("nebula.release") version "16.0.0"
-
-    id("nebula.maven-manifest") version "18.4.0"
-    id("nebula.maven-nebula-publish") version "18.4.0"
-    id("nebula.maven-resolved-dependencies") version "18.4.0"
-
-    id("nebula.contacts") version "6.0.0"
-    id("nebula.info") version "11.3.3"
-
-    id("nebula.javadoc-jar") version "18.4.0"
-    id("nebula.source-jar") version "18.4.0"
+    id("org.openrewrite.build.recipe-library") version "latest.release"
 }
-
-apply(plugin = "nebula.publish-verification")
-
-configure<nebula.plugin.release.git.base.ReleasePluginExtension> {
-    defaultVersionStrategy = nebula.plugin.release.NetflixOssStrategies.SNAPSHOT(project)
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
-}
-
 // Set as appropriate for your organization
-group = "com.yourorg"
-description = "Rewrite recipes."
+group = "org.openrewrite.recipe"
+description = "Rewrite recipes which have dependencies on many other rewrite recipes or language parsers."
 
-repositories {
-    mavenLocal()
-    maven {
-        url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
-    }
-    mavenCentral()
-}
-
-configurations.all {
-    resolutionStrategy {
-        cacheChangingModulesFor(0, TimeUnit.SECONDS)
-        cacheDynamicVersionsFor(0, TimeUnit.SECONDS)
-    }
-}
-
-//The bom version can also be set to a specific version or latest.release.
-val rewriteBomVersion = "latest.integration"
-
+val rewriteVersion = rewriteRecipe.rewriteVersion.get()
 dependencies {
     compileOnly("org.projectlombok:lombok:latest.release")
     compileOnly("com.google.code.findbugs:jsr305:latest.release")
     annotationProcessor("org.projectlombok:lombok:latest.release")
-    implementation(platform("org.openrewrite.recipe:rewrite-recipe-bom:${rewriteBomVersion}"))
 
+    implementation(platform("org.openrewrite:rewrite-bom:$rewriteVersion"))
+    implementation("org.openrewrite:rewrite-gradle")
+    implementation("org.openrewrite:rewrite-groovy")
+    implementation("org.openrewrite:rewrite-hcl")
     implementation("org.openrewrite:rewrite-java")
-    runtimeOnly("org.openrewrite:rewrite-java-17")
+    implementation("org.openrewrite:rewrite-json")
+    implementation("org.openrewrite:rewrite-maven")
+    implementation("org.openrewrite:rewrite-properties")
+    implementation("org.openrewrite:rewrite-protobuf")
+    implementation("org.openrewrite:rewrite-xml")
+    implementation("org.openrewrite:rewrite-yaml")
+    implementation("org.openrewrite:rewrite-python:$rewriteVersion")
+    implementation("org.openrewrite:rewrite-kotlin:$rewriteVersion")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:latest.release")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:latest.release")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:latest.release")
-
-    testImplementation("org.openrewrite:rewrite-test")
-    testImplementation("org.assertj:assertj-core:latest.release")
-}
-
-tasks.named<Test>("test") {
-    useJUnitPlatform()
-    jvmArgs = listOf("-XX:+UnlockDiagnosticVMOptions", "-XX:+ShowHiddenFrames")
-}
-
-tasks.withType<JavaCompile>().configureEach {
-    options.encoding = "UTF-8"
-    options.compilerArgs.add("-parameters")
-}
-tasks.named<JavaCompile>("compileJava") {
-    options.release.set(8)
-}
-
-configure<ContactsExtension> {
-    val j = Contact("team@moderne.io")
-    j.moniker("Team Moderne")
-    people["team@moderne.io"] = j
-}
-
-configure<PublishingExtension> {
-    publications {
-        named("nebula", MavenPublication::class.java) {
-            suppressPomMetadataWarningsFor("runtimeElements")
-        }
-    }
-}
-
-publishing {
-  repositories {
-      maven {
-          name = "moderne"
-          url = uri("https://us-west1-maven.pkg.dev/moderne-dev/moderne-recipe")
-      }
-  }
+    testRuntimeOnly("org.openrewrite:rewrite-java-17")
 }
