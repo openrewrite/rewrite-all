@@ -43,7 +43,7 @@ public class LanguageComposition extends Recipe {
 
     @Override
     public String getDisplayName() {
-        return "Language composition report";
+        return "Per-repository language composition report";
     }
 
     @Override
