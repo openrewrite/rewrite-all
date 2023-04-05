@@ -166,7 +166,7 @@ public class LanguageComposition extends Recipe {
                 return this;
             }
             if(text.contains("\n")) {
-                count++;
+                count += text.split("([\r\n]+)").length;
             }
             return this;
         }

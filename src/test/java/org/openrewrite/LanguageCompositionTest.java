@@ -18,9 +18,11 @@ package org.openrewrite;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
+import org.openrewrite.test.SourceSpecs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.openrewrite.java.Assertions.java;
+import static org.openrewrite.test.SourceSpecs.text;
 
 public class LanguageCompositionTest implements RewriteTest {
 
@@ -37,6 +39,8 @@ public class LanguageCompositionTest implements RewriteTest {
                 LanguageCompositionReport.Row row = table.get(0);
                 assertThat(row.getJavaLineCount()).isEqualTo(3);
                 assertThat(row.getJavaFileCount()).isEqualTo(1);
+                assertThat(row.getPlainTextFileCount()).isEqualTo(1);
+                assertThat(row.getPlainTextLineCount()).isGreaterThan(0);
             }),
             //language=java
             java("""
@@ -46,7 +50,13 @@ public class LanguageCompositionTest implements RewriteTest {
                     void foo() {
                     }
                 }
+                """),
+            text("""
+                hello
+                world
+                
                 """)
+
         );
     }
 }
