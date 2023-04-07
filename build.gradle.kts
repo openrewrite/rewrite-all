@@ -5,13 +5,13 @@ plugins {
 group = "org.openrewrite.recipe"
 description = "Rewrite recipes which have dependencies on many other rewrite recipes or language parsers."
 
-val rewriteVersion = rewriteRecipe.rewriteVersion.get()
+val latest = rewriteRecipe.rewriteVersion.get()
 dependencies {
     compileOnly("org.projectlombok:lombok:latest.release")
     compileOnly("com.google.code.findbugs:jsr305:latest.release")
     annotationProcessor("org.projectlombok:lombok:latest.release")
 
-    implementation(platform("org.openrewrite:rewrite-bom:$rewriteVersion"))
+    implementation(platform("org.openrewrite:rewrite-bom:$latest"))
     implementation("org.openrewrite:rewrite-gradle")
     implementation("org.openrewrite:rewrite-groovy")
     implementation("org.openrewrite:rewrite-hcl")
@@ -22,8 +22,10 @@ dependencies {
     implementation("org.openrewrite:rewrite-protobuf")
     implementation("org.openrewrite:rewrite-xml")
     implementation("org.openrewrite:rewrite-yaml")
-    implementation("org.openrewrite:rewrite-python:$rewriteVersion")
-    implementation("org.openrewrite:rewrite-kotlin:$rewriteVersion")
+    implementation("org.openrewrite:rewrite-python:$latest")
+    implementation("org.openrewrite:rewrite-kotlin:$latest")
+    implementation("org.openrewrite.gradle.tooling:model:$latest")
 
+    runtimeOnly("org.gradle:gradle-tooling-api:$latest")
     testRuntimeOnly("org.openrewrite:rewrite-java-17")
 }
