@@ -5,6 +5,15 @@ plugins {
 group = "org.openrewrite.recipe"
 description = "Rewrite recipes which have dependencies on many other rewrite recipes or language parsers."
 
+repositories {
+    maven {
+        url = uri("https://repo.gradle.org/gradle/libs-releases/")
+        content {
+            excludeVersionByRegex(".+", ".+", ".+-rc-?[0-9]*")
+        }
+    }
+}
+
 val latest = rewriteRecipe.rewriteVersion.get()
 dependencies {
     compileOnly("org.projectlombok:lombok:latest.release")
