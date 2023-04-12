@@ -18,7 +18,6 @@ package org.openrewrite;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
-import org.openrewrite.test.SourceSpecs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.openrewrite.java.Assertions.java;
@@ -34,14 +33,44 @@ public class LanguageCompositionTest implements RewriteTest {
     @Test
     void countsJava() {
         rewriteRun(
-            spec -> spec.dataTable(LanguageCompositionReport.Row.class, table -> {
-                assertThat(table).hasSize(1);
-                LanguageCompositionReport.Row row = table.get(0);
-                assertThat(row.getJavaLineCount()).isEqualTo(3);
-                assertThat(row.getJavaFileCount()).isEqualTo(1);
-                assertThat(row.getPlainTextFileCount()).isEqualTo(1);
-                assertThat(row.getPlainTextLineCount()).isGreaterThan(0);
-            }),
+            spec -> {
+                spec.dataTable(LanguageCompositionReport.Row.class, table -> {
+                    assertThat(table).hasSize(2);
+                    boolean hasJava = false;
+                    boolean hasPlainText = false;
+                    for (LanguageCompositionReport.Row row : table) {
+                        if(row.getLanguage().equals("Java")) {
+                            assertThat(row.getFileCount()).isEqualTo(1);
+                            assertThat(row.getLineCount()).isEqualTo(3);
+                            hasJava = true;
+                        } else if (row.getLanguage().equals("Plain text")) {
+                            assertThat(row.getFileCount()).isEqualTo(1);
+                            assertThat(row.getLineCount()).isGreaterThan(0);
+                            hasPlainText = true;
+                        }
+                    }
+                    assertThat(hasJava).isTrue();
+                    assertThat(hasPlainText).isTrue();
+                });
+                spec.dataTable(org.openrewrite.table.LanguageComposition.Row.class, table -> {
+                    assertThat(table).hasSize(2);
+                    boolean hasJava = false;
+                    boolean hasPlainText = false;
+                    for(org.openrewrite.table.LanguageComposition.Row row : table) {
+                        if (row.getLanguage().equals("Java")) {
+                            assertThat(row.getWeight()).isGreaterThan(0);
+                            assertThat(row.getLinesOfText()).isEqualTo(3);
+                            hasJava = true;
+                        } else if (row.getLanguage().equals("Plain text")){
+                            assertThat(row.getWeight()).isGreaterThan(0);
+                            assertThat(row.getLinesOfText()).isEqualTo(2);
+                            hasPlainText = true;
+                        }
+                    }
+                    assertThat(hasJava).isTrue();
+                    assertThat(hasPlainText).isTrue();
+                });
+            },
             //language=java
             java("""
                 package com.whatever;
