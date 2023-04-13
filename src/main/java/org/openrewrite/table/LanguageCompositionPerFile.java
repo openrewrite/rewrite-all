@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the original author or authors.
+ * Copyright 2023 the original author or authors.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.openrewrite;
+package org.openrewrite.table;
 
 import lombok.Value;
+import org.openrewrite.Column;
+import org.openrewrite.DataTable;
+import org.openrewrite.Recipe;
 
-public class PerFileLanguageCompositionReport extends DataTable<org.openrewrite.table.LanguageComposition.Row> {
+public class LanguageCompositionPerFile extends DataTable<LanguageCompositionPerFile.Row> {
 
-    public PerFileLanguageCompositionReport(Recipe recipe) {
+    public LanguageCompositionPerFile(Recipe recipe) {
         super(recipe, "Per-file language composition report",
                 "A list of individual files and their language composition.");
     }
@@ -36,13 +39,13 @@ public class PerFileLanguageCompositionReport extends DataTable<org.openrewrite.
 
         @Column(displayName = "Weight",
                 description = "The weight of the source file, in terms of " +
-                              "total number of AST nodes, markers, and type " +
-                              "attribution nodes.")
+                        "total number of AST nodes, markers, and type " +
+                        "attribution nodes.")
         Long weight;
 
         @Column(displayName = "Lines of text",
                 description = "The number of lines of text in the source file. " +
-                              "No language-specific knowledge to skip comments, blank lines, or any other non-code line.")
+                        "No language-specific knowledge to skip comments, blank lines, or any other non-code line.")
         Integer linesOfText;
     }
 }

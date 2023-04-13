@@ -13,18 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.openrewrite;
+package org.openrewrite.table;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import lombok.Value;
+import org.openrewrite.Column;
+import org.openrewrite.DataTable;
+import org.openrewrite.Recipe;
 
 @JsonIgnoreType
-public class PerRepositoryLanguageCompositionReport extends DataTable<PerRepositoryLanguageCompositionReport.Row> {
+public class LanguageCompositionPerRepository extends DataTable<LanguageCompositionPerRepository.Row> {
 
-    public PerRepositoryLanguageCompositionReport(Recipe recipe) {
+    public LanguageCompositionPerRepository(Recipe recipe) {
         super(recipe,
-            "Language composition report",
-            "Counts the number of files and lines of source code in the various formats OpenRewrite knows how to parse.");
+                "Language composition report",
+                "Counts the number of files and lines of source code in the various formats OpenRewrite knows how to parse.");
     }
 
     @Value

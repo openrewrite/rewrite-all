@@ -16,6 +16,8 @@
 package org.openrewrite;
 
 import org.junit.jupiter.api.Test;
+import org.openrewrite.table.LanguageCompositionPerFile;
+import org.openrewrite.table.LanguageCompositionPerRepository;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
@@ -31,14 +33,14 @@ public class LanguageCompositionTest implements RewriteTest {
     }
 
     @Test
-    void countsJava() {
+    void javaAndPlainText() {
         rewriteRun(
             spec -> {
-                spec.dataTable(PerRepositoryLanguageCompositionReport.Row.class, table -> {
+                spec.dataTable(LanguageCompositionPerRepository.Row.class, table -> {
                     assertThat(table).hasSize(2);
                     boolean hasJava = false;
                     boolean hasPlainText = false;
-                    for (PerRepositoryLanguageCompositionReport.Row row : table) {
+                    for (LanguageCompositionPerRepository.Row row : table) {
                         if(row.getLanguage().equals("Java")) {
                             assertThat(row.getFileCount()).isEqualTo(1);
                             assertThat(row.getLineCount()).isEqualTo(3);
@@ -52,11 +54,11 @@ public class LanguageCompositionTest implements RewriteTest {
                     assertThat(hasJava).isTrue();
                     assertThat(hasPlainText).isTrue();
                 });
-                spec.dataTable(PerFileLanguageCompositionReport.Row.class, table -> {
+                spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
                     assertThat(table).hasSize(2);
                     boolean hasJava = false;
                     boolean hasPlainText = false;
-                    for(PerFileLanguageCompositionReport.Row row : table) {
+                    for(LanguageCompositionPerFile.Row row : table) {
                         if (row.getLanguage().equals("Java")) {
                             assertThat(row.getWeight()).isGreaterThan(0);
                             assertThat(row.getLinesOfText()).isEqualTo(3);
