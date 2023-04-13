@@ -36,6 +36,7 @@ import org.openrewrite.xml.tree.Xml;
 import org.openrewrite.yaml.tree.Yaml;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
@@ -63,6 +64,16 @@ public class LanguageComposition extends Recipe {
         Map<String, Counts> map = new HashMap<>();
         Set<Integer> ids = new LinkedHashSet<>();
         for (SourceFile s : before) {
+            AtomicBoolean hasParseFailure = new AtomicBoolean();
+            new TreeVisitor<Tree, AtomicBoolean>() {
+                @Override
+                public Tree visitSourceFile(SourceFile sourceFile, AtomicBoolean atomicBoolean) {
+                    if (sourceFile.getMarkers().findFirst(ParseExceptionResult.class).isPresent()) {
+                        atomicBoolean.set(true);
+                    }
+                    return super.visitSourceFile(sourceFile, atomicBoolean);
+                }
+            }.visit(s, hasParseFailure);
             if (s instanceof Quark || s instanceof Binary || s instanceof Remote) {
                 Counts quarkCounts = map.computeIfAbsent("Other/unknown/unparseable", k -> new Counts());
                 quarkCounts.fileCount++;
@@ -71,7 +82,8 @@ public class LanguageComposition extends Recipe {
                         "Other/unknown/unparseable",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        0));
+                        0,
+                        hasParseFailure.get()));
             } else if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.Cobol")) {
                 Counts cobolCounts = map.computeIfAbsent("Cobol", k -> new Counts());
                 cobolCounts.fileCount++;
@@ -81,7 +93,8 @@ public class LanguageComposition extends Recipe {
                         "Cobol",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        cobolCounts.lineCount));
+                        cobolCounts.lineCount,
+                        hasParseFailure.get()));
             } else if (s instanceof K) {
                 Counts kotlinCounts = map.computeIfAbsent("Kotlin", k -> new Counts());
                 kotlinCounts.fileCount++;
@@ -92,7 +105,8 @@ public class LanguageComposition extends Recipe {
                         "Kotlin",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        kotlinCounts.lineCount));
+                        kotlinCounts.lineCount,
+                        hasParseFailure.get()));
             } else if (s instanceof G) {
                 Counts groovyCounts = map.computeIfAbsent("Groovy", k -> new Counts());
                 groovyCounts.fileCount++;
@@ -102,7 +116,8 @@ public class LanguageComposition extends Recipe {
                         "Groovy",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        groovyCounts.lineCount));
+                        groovyCounts.lineCount,
+                        hasParseFailure.get()));
             } else if (s instanceof Py) {
                 Counts pythonCounts = map.computeIfAbsent("Python", k -> new Counts());
                 pythonCounts.fileCount++;
@@ -112,7 +127,8 @@ public class LanguageComposition extends Recipe {
                         "Python",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        pythonCounts.lineCount));
+                        pythonCounts.lineCount,
+                        hasParseFailure.get()));
             } else if (s instanceof J) {
                 Counts javaCounts = map.computeIfAbsent("Java", k -> new Counts());
                 javaCounts.fileCount++;
@@ -122,7 +138,8 @@ public class LanguageComposition extends Recipe {
                         "Java",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        javaCounts.lineCount));
+                        javaCounts.lineCount,
+                        hasParseFailure.get()));
             } else if (s instanceof Json) {
                 Counts jsonCounts = map.computeIfAbsent("Json", k -> new Counts());
                 jsonCounts.fileCount++;
@@ -132,7 +149,8 @@ public class LanguageComposition extends Recipe {
                         "Json",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        jsonCounts.lineCount));
+                        jsonCounts.lineCount,
+                        hasParseFailure.get()));
             } else if (s instanceof Hcl) {
                 Counts hclCounts = map.computeIfAbsent("Hcl", k -> new Counts());
                 hclCounts.fileCount++;
@@ -142,7 +160,8 @@ public class LanguageComposition extends Recipe {
                         "Hcl",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        hclCounts.lineCount));
+                        hclCounts.lineCount,
+                        hasParseFailure.get()));
             } else if (s instanceof Properties) {
                 Counts propertiesCounts = map.computeIfAbsent("Properties", k -> new Counts());
                 propertiesCounts.fileCount++;
@@ -152,7 +171,8 @@ public class LanguageComposition extends Recipe {
                         "Properties",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        propertiesCounts.lineCount));
+                        propertiesCounts.lineCount,
+                        hasParseFailure.get()));
             } else if (s instanceof Proto) {
                 Counts protobufCounts = map.computeIfAbsent("Protobuf", k -> new Counts());
                 protobufCounts.fileCount++;
@@ -162,7 +182,8 @@ public class LanguageComposition extends Recipe {
                         "Protobuf",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        protobufCounts.lineCount));
+                        protobufCounts.lineCount,
+                        hasParseFailure.get()));
             } else if (s instanceof Xml) {
                 Counts xmlCounts = map.computeIfAbsent("Xml", k -> new Counts());
                 xmlCounts.fileCount++;
@@ -172,7 +193,8 @@ public class LanguageComposition extends Recipe {
                         "Xml",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        xmlCounts.lineCount));
+                        xmlCounts.lineCount,
+                        hasParseFailure.get()));
             } else if (s instanceof Yaml) {
                 Counts yamlCounts = map.computeIfAbsent("Yaml", k -> new Counts());
                 yamlCounts.fileCount++;
@@ -182,7 +204,8 @@ public class LanguageComposition extends Recipe {
                         "Yaml",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        yamlCounts.lineCount));
+                        yamlCounts.lineCount,
+                        hasParseFailure.get()));
             } else if (s instanceof PlainText) {
                 Counts plainTextCounts = map.computeIfAbsent("Plain text", k -> new Counts());
                 plainTextCounts.fileCount++;
@@ -192,7 +215,8 @@ public class LanguageComposition extends Recipe {
                         "Plain text",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        plainTextCounts.lineCount));
+                        plainTextCounts.lineCount,
+                        hasParseFailure.get()));
             } else {
                 Counts unknownCounts = map.computeIfAbsent("Unknown", k -> new Counts());
                 unknownCounts.fileCount++;
@@ -202,7 +226,8 @@ public class LanguageComposition extends Recipe {
                         "Unknown",
                         s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
-                        unknownCounts.lineCount));
+                        unknownCounts.lineCount,
+                        hasParseFailure.get()));
             }
         }
         for(Map.Entry<String, Counts> entry : map.entrySet()) {
