@@ -17,7 +17,7 @@ package org.openrewrite;
 
 import lombok.Value;
 
-public class PerFileLanguageCompositionReport extends DataTable<org.openrewrite.table.LanguageComposition.Row> {
+public class PerFileLanguageCompositionReport extends DataTable<PerFileLanguageCompositionReport.Row> {
 
     public PerFileLanguageCompositionReport(Recipe recipe) {
         super(recipe, "Per-file language composition report",

@@ -67,7 +67,7 @@ public class LanguageComposition extends Recipe {
                 Counts cobolCounts = map.computeIfAbsent("Cobol", k -> new Counts());
                 cobolCounts.fileCount++;
                 cobolCounts.lineCount += genericLineCount(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Cobol",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
@@ -77,7 +77,7 @@ public class LanguageComposition extends Recipe {
                 kotlinCounts.fileCount++;
                 // Don't have a kotlin-specific counter yet and Java count should be very close
                 kotlinCounts.lineCount += org.openrewrite.java.CountLinesVisitor.countLines(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Kotlin",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
@@ -86,7 +86,7 @@ public class LanguageComposition extends Recipe {
                 Counts groovyCounts = map.computeIfAbsent("Groovy", k -> new Counts());
                 groovyCounts.fileCount++;
                 groovyCounts.lineCount += org.openrewrite.groovy.CountLinesVisitor.countLines(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Groovy",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
@@ -95,7 +95,7 @@ public class LanguageComposition extends Recipe {
                 Counts pythonCounts = map.computeIfAbsent("Python", k -> new Counts());
                 pythonCounts.fileCount++;
                 pythonCounts.lineCount += genericLineCount(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Python",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
@@ -104,7 +104,7 @@ public class LanguageComposition extends Recipe {
                 Counts javaCounts = map.computeIfAbsent("Java", k -> new Counts());
                 javaCounts.fileCount++;
                 javaCounts.lineCount += org.openrewrite.java.CountLinesVisitor.countLines(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Java",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
@@ -113,7 +113,7 @@ public class LanguageComposition extends Recipe {
                 Counts jsonCounts = map.computeIfAbsent("Json", k -> new Counts());
                 jsonCounts.fileCount++;
                 jsonCounts.lineCount += org.openrewrite.json.CountLinesVisitor.countLines(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Json",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
@@ -122,7 +122,7 @@ public class LanguageComposition extends Recipe {
                 Counts hclCounts = map.computeIfAbsent("Hcl", k -> new Counts());
                 hclCounts.fileCount++;
                 hclCounts.lineCount += org.openrewrite.hcl.CountLinesVisitor.countLines(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Hcl",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
@@ -131,7 +131,7 @@ public class LanguageComposition extends Recipe {
                 Counts propertiesCounts = map.computeIfAbsent("Properties", k -> new Counts());
                 propertiesCounts.fileCount++;
                 propertiesCounts.lineCount += org.openrewrite.properties.CountLinesVisitor.countLines(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Properties",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
@@ -140,7 +140,7 @@ public class LanguageComposition extends Recipe {
                 Counts protobufCounts = map.computeIfAbsent("Protobuf", k -> new Counts());
                 protobufCounts.fileCount++;
                 protobufCounts.lineCount += org.openrewrite.protobuf.CountLinesVisitor.countLines(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Protobuf",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
@@ -149,7 +149,7 @@ public class LanguageComposition extends Recipe {
                 Counts xmlCounts = map.computeIfAbsent("Xml", k -> new Counts());
                 xmlCounts.fileCount++;
                 xmlCounts.lineCount += org.openrewrite.xml.CountLinesVisitor.countLines(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Xml",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
@@ -158,7 +158,7 @@ public class LanguageComposition extends Recipe {
                 Counts yamlCounts = map.computeIfAbsent("Yaml", k -> new Counts());
                 yamlCounts.fileCount++;
                 yamlCounts.lineCount += org.openrewrite.yaml.CountLinesVisitor.countLines(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Yaml",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
@@ -167,7 +167,7 @@ public class LanguageComposition extends Recipe {
                 Counts plainTextCounts = map.computeIfAbsent("Plain text", k -> new Counts());
                 plainTextCounts.fileCount++;
                 plainTextCounts.lineCount += genericLineCount(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Plain text",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
@@ -176,7 +176,7 @@ public class LanguageComposition extends Recipe {
                 Counts unknownCounts = map.computeIfAbsent("Unknown", k -> new Counts());
                 unknownCounts.fileCount++;
                 unknownCounts.lineCount += genericLineCount(s);
-                perFileReport.insertRow(ctx, new org.openrewrite.table.LanguageComposition.Row(
+                perFileReport.insertRow(ctx, new PerFileLanguageCompositionReport.Row(
                         s.getSourcePath().toString(),
                         "Unknown",
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
