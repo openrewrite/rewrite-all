@@ -25,6 +25,7 @@ dependencies {
     implementation("org.openrewrite:rewrite-groovy")
     implementation("org.openrewrite:rewrite-hcl")
     implementation("org.openrewrite:rewrite-java")
+    implementation("org.openrewrite.recipe:rewrite-java-dependencies:$latest")
     implementation("org.openrewrite:rewrite-json")
     implementation("org.openrewrite:rewrite-maven")
     implementation("org.openrewrite:rewrite-properties")
