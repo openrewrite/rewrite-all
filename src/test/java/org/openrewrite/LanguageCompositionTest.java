@@ -34,11 +34,11 @@ public class LanguageCompositionTest implements RewriteTest {
     void countsJava() {
         rewriteRun(
             spec -> {
-                spec.dataTable(LanguageCompositionReport.Row.class, table -> {
+                spec.dataTable(PerRepositoryLanguageCompositionReport.Row.class, table -> {
                     assertThat(table).hasSize(2);
                     boolean hasJava = false;
                     boolean hasPlainText = false;
-                    for (LanguageCompositionReport.Row row : table) {
+                    for (PerRepositoryLanguageCompositionReport.Row row : table) {
                         if(row.getLanguage().equals("Java")) {
                             assertThat(row.getFileCount()).isEqualTo(1);
                             assertThat(row.getLineCount()).isEqualTo(3);
@@ -52,11 +52,11 @@ public class LanguageCompositionTest implements RewriteTest {
                     assertThat(hasJava).isTrue();
                     assertThat(hasPlainText).isTrue();
                 });
-                spec.dataTable(org.openrewrite.table.LanguageComposition.Row.class, table -> {
+                spec.dataTable(PerFileLanguageCompositionReport.Row.class, table -> {
                     assertThat(table).hasSize(2);
                     boolean hasJava = false;
                     boolean hasPlainText = false;
-                    for(org.openrewrite.table.LanguageComposition.Row row : table) {
+                    for(PerFileLanguageCompositionReport.Row row : table) {
                         if (row.getLanguage().equals("Java")) {
                             assertThat(row.getWeight()).isGreaterThan(0);
                             assertThat(row.getLinesOfText()).isEqualTo(3);
