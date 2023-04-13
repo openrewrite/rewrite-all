@@ -19,9 +19,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import lombok.Value;
 
 @JsonIgnoreType
-public class LanguageCompositionReport extends DataTable<LanguageCompositionReport.Row> {
+public class PerRepositoryLanguageCompositionReport extends DataTable<PerRepositoryLanguageCompositionReport.Row> {
 
-    public LanguageCompositionReport(Recipe recipe) {
+    public PerRepositoryLanguageCompositionReport(Recipe recipe) {
         super(recipe,
             "Language composition report",
             "Counts the number of files and lines of source code in the various formats OpenRewrite knows how to parse.");

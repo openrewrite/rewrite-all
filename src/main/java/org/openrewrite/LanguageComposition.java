@@ -39,12 +39,12 @@ import java.util.*;
 @EqualsAndHashCode(callSuper = true)
 public class LanguageComposition extends Recipe {
 
-    transient LanguageCompositionReport report = new LanguageCompositionReport(this);
-    transient org.openrewrite.table.LanguageComposition perFileReport = new org.openrewrite.table.LanguageComposition(this);
+    transient PerRepositoryLanguageCompositionReport report = new PerRepositoryLanguageCompositionReport(this);
+    transient PerFileLanguageCompositionReport perFileReport = new PerFileLanguageCompositionReport(this);
 
     @Override
     public String getDisplayName() {
-        return "Per-repository language composition report";
+        return "Language composition report";
     }
 
     @Override
@@ -52,7 +52,8 @@ public class LanguageComposition extends Recipe {
         //language=markdown
         return "Counts the number of lines of the various kinds of source code and data formats parsed by OpenRewrite. " +
                "Comments are not included in line counts. " +
-               "This recipe emits its results as a data table, making no changes to any source file.";
+               "This recipe emits its results as two data tables, making no changes to any source file. " +
+               "One data table is per-file, the other is per-repository.";
     }
 
     @Override
@@ -183,7 +184,7 @@ public class LanguageComposition extends Recipe {
             }
         }
         for(Map.Entry<String, Counts> entry : map.entrySet()) {
-            report.insertRow(ctx, new LanguageCompositionReport.Row(entry.getKey(), entry.getValue().fileCount, entry.getValue().lineCount));
+            report.insertRow(ctx, new PerRepositoryLanguageCompositionReport.Row(entry.getKey(), entry.getValue().fileCount, entry.getValue().lineCount));
         }
         return before;
     }
