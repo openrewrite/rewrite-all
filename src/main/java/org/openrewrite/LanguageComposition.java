@@ -64,14 +64,22 @@ public class LanguageComposition extends Recipe {
         Set<Integer> ids = new LinkedHashSet<>();
         for (SourceFile s : before) {
             if (s instanceof Quark || s instanceof Binary || s instanceof Remote) {
-                map.computeIfAbsent("Other/unknown/unparseable", k -> new Counts()).fileCount++;
-            } else if ("org.openrewrite.cobol.tree.Cobol".equals(s.getClass().getName())) {
+                Counts quarkCounts = map.computeIfAbsent("Other/unknown/unparseable", k -> new Counts());
+                quarkCounts.fileCount++;
+                perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                        s.getSourcePath().toString(),
+                        "Other/unknown/unparseable",
+                        s.getClass().getName(),
+                        s.getWeight(id -> ids.add(System.identityHashCode(id))),
+                        0));
+            } else if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.Cobol")) {
                 Counts cobolCounts = map.computeIfAbsent("Cobol", k -> new Counts());
                 cobolCounts.fileCount++;
                 cobolCounts.lineCount += genericLineCount(s);
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Cobol",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         cobolCounts.lineCount));
             } else if (s instanceof K) {
@@ -82,6 +90,7 @@ public class LanguageComposition extends Recipe {
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Kotlin",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         kotlinCounts.lineCount));
             } else if (s instanceof G) {
@@ -91,6 +100,7 @@ public class LanguageComposition extends Recipe {
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Groovy",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         groovyCounts.lineCount));
             } else if (s instanceof Py) {
@@ -100,6 +110,7 @@ public class LanguageComposition extends Recipe {
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Python",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         pythonCounts.lineCount));
             } else if (s instanceof J) {
@@ -109,6 +120,7 @@ public class LanguageComposition extends Recipe {
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Java",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         javaCounts.lineCount));
             } else if (s instanceof Json) {
@@ -118,6 +130,7 @@ public class LanguageComposition extends Recipe {
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Json",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         jsonCounts.lineCount));
             } else if (s instanceof Hcl) {
@@ -127,6 +140,7 @@ public class LanguageComposition extends Recipe {
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Hcl",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         hclCounts.lineCount));
             } else if (s instanceof Properties) {
@@ -136,6 +150,7 @@ public class LanguageComposition extends Recipe {
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Properties",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         propertiesCounts.lineCount));
             } else if (s instanceof Proto) {
@@ -145,6 +160,7 @@ public class LanguageComposition extends Recipe {
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Protobuf",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         protobufCounts.lineCount));
             } else if (s instanceof Xml) {
@@ -154,6 +170,7 @@ public class LanguageComposition extends Recipe {
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Xml",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         xmlCounts.lineCount));
             } else if (s instanceof Yaml) {
@@ -163,6 +180,7 @@ public class LanguageComposition extends Recipe {
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Yaml",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         yamlCounts.lineCount));
             } else if (s instanceof PlainText) {
@@ -172,6 +190,7 @@ public class LanguageComposition extends Recipe {
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Plain text",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         plainTextCounts.lineCount));
             } else {
@@ -181,6 +200,7 @@ public class LanguageComposition extends Recipe {
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
                         "Unknown",
+                        s.getClass().getName(),
                         s.getWeight(id -> ids.add(System.identityHashCode(id))),
                         unknownCounts.lineCount));
             }
