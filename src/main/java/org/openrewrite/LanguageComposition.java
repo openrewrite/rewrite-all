@@ -29,8 +29,8 @@ import org.openrewrite.protobuf.tree.Proto;
 import org.openrewrite.python.tree.Py;
 import org.openrewrite.quark.Quark;
 import org.openrewrite.remote.Remote;
-import org.openrewrite.table.LanguageCompositionPerRepository;
 import org.openrewrite.table.LanguageCompositionPerFile;
+import org.openrewrite.table.LanguageCompositionPerRepository;
 import org.openrewrite.text.PlainText;
 import org.openrewrite.xml.tree.Xml;
 import org.openrewrite.yaml.tree.Yaml;
@@ -67,11 +67,12 @@ public class LanguageComposition extends Recipe {
             AtomicBoolean hasParseFailure = new AtomicBoolean();
             new TreeVisitor<Tree, AtomicBoolean>() {
                 @Override
-                public Tree visitSourceFile(SourceFile sourceFile, AtomicBoolean atomicBoolean) {
-                    if (sourceFile.getMarkers().findFirst(ParseExceptionResult.class).isPresent()) {
+                public Tree visit(@Nullable Tree tree, AtomicBoolean atomicBoolean) {
+                    Tree t = super.visit(tree, atomicBoolean);
+                    if (t != null && t.getMarkers().findFirst(ParseExceptionResult.class).isPresent()) {
                         atomicBoolean.set(true);
                     }
-                    return super.visitSourceFile(sourceFile, atomicBoolean);
+                    return t;
                 }
             }.visit(s, hasParseFailure);
             if (s instanceof Quark || s instanceof Binary || s instanceof Remote) {

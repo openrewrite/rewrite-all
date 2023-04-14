@@ -16,6 +16,9 @@
 package org.openrewrite;
 
 import org.junit.jupiter.api.Test;
+import org.openrewrite.java.JavaIsoVisitor;
+import org.openrewrite.java.JavaVisitor;
+import org.openrewrite.java.tree.J;
 import org.openrewrite.table.LanguageCompositionPerFile;
 import org.openrewrite.table.LanguageCompositionPerRepository;
 import org.openrewrite.test.RecipeSpec;
@@ -89,5 +92,67 @@ public class LanguageCompositionTest implements RewriteTest {
                 """)
 
         );
+    }
+
+    @Test
+    void hasParseFailures() {
+        rewriteRun(
+            spec -> {
+                spec.recipe(new AddParseFailure());
+                spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
+                    assertThat(table).hasSize(1);
+                    assertThat(table.get(0).getHasParseFailures()).isTrue();
+                });
+            },
+            java(
+                """
+                package com.whatever;
+                
+                class A {
+                    void foo() {
+                    }
+                }
+                """,
+                """
+                package com.whatever;
+                
+                class A {
+                    void foo() {
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    private static class AddParseFailure extends Recipe {
+
+        @Override
+        public String getDisplayName() {
+            return "Add parse failure";
+        }
+
+        @Override
+        public String getDescription() {
+            return "Add parse failure.";
+        }
+
+        @Override
+        protected TreeVisitor<?, ExecutionContext> getVisitor() {
+            return new JavaVisitor<>() {
+                @Override
+                public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext executionContext) {
+                    J.ClassDeclaration cd = (J.ClassDeclaration) super.visitClassDeclaration(classDecl, executionContext);
+                    if (cd.getMarkers().findFirst(ParseExceptionResult.class).isPresent()) {
+                        return cd;
+                    }
+                    doAfterVisit(new LanguageComposition());
+                    return cd.withMarkers(cd
+                            .getMarkers()
+                            .add(new ParseExceptionResult(Tree.randomId(), "Parsing failed."))
+                        );
+                }
+            };
+        }
     }
 }
