@@ -137,7 +137,7 @@ public class LanguageCompositionTest implements RewriteTest {
         }
 
         @Override
-        protected TreeVisitor<?, ExecutionContext> getVisitor() {
+        public TreeVisitor<?, ExecutionContext> getVisitor() {
             return new JavaVisitor<>() {
                 @Override
                 public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext executionContext) {
