@@ -81,9 +81,9 @@ Also see:
 * Sonatype's instructions for [publishing to Maven Central](https://maven.apache.org/repository/guide-central-repository-upload.html) 
 * Gradle's instructions on the [Gradle Publishing Plugin](https://docs.gradle.org/current/userguide/publishing_maven.html).
 
-### From Github Actions
+### From GitHub Actions
 
-The .github directory contains a Github action that will push a snapshot on every successful build.
+The .github directory contains a GitHub action that will push a snapshot on every successful build.
 
 Run the release action to publish a release version of a recipe.
 
