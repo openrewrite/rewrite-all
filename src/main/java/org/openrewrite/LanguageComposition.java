@@ -66,7 +66,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
     }
 
     @Override
-    public Accumulator getInitialValue() {
+    public Accumulator getInitialValue(ExecutionContext ctx) {
         return new Accumulator();
     }
 
