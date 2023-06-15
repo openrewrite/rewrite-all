@@ -60,11 +60,9 @@ public class LanguageCompositionTest implements RewriteTest {
                     boolean hasPlainText = false;
                     for(LanguageCompositionPerFile.Row row : table) {
                         if (row.getLanguage().equals("Java")) {
-                            assertThat(row.getWeight()).isGreaterThan(0);
                             assertThat(row.getLinesOfText()).isEqualTo(3);
                             hasJava = true;
                         } else if (row.getLanguage().equals("Plain text")){
-                            assertThat(row.getWeight()).isGreaterThan(0);
                             assertThat(row.getLinesOfText()).isEqualTo(2);
                             hasPlainText = true;
                         }

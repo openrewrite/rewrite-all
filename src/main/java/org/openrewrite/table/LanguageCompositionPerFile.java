@@ -41,12 +41,6 @@ public class LanguageCompositionPerFile extends DataTable<LanguageCompositionPer
                 description = "The OpenRewrite class that was parsed for this source file.")
         String parserClass;
 
-        @Column(displayName = "Weight",
-                description = "The weight of the source file, in terms of " +
-                        "total number of AST nodes, markers, and type " +
-                        "attribution nodes.")
-        Long weight;
-
         @Column(displayName = "Lines of text",
                 description = "The number of lines of text in the source file. " +
                         "No language-specific knowledge to skip comments, blank lines, or any other non-code line.")

@@ -62,7 +62,6 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
     @Data
     static class Accumulator {
         Map<String, Counts> map = new HashMap<>();
-        Set<Integer> ids = new LinkedHashSet<>();
     }
 
     @Override
@@ -89,153 +88,142 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                             s.getSourcePath().toString(),
                             "Other/unknown/unparseable",
                             s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
                             0,
                             hasParseFailure));
-                } else if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.Cobol")) {
-                    Counts cobolCounts = acc.getMap().computeIfAbsent("Cobol", k -> new Counts());
-                    cobolCounts.fileCount++;
-                    cobolCounts.lineCount += genericLineCount(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Cobol",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            cobolCounts.lineCount,
-                            hasParseFailure));
-                } else if (s instanceof K) {
-                    Counts kotlinCounts = acc.getMap().computeIfAbsent("Kotlin", k -> new Counts());
-                    kotlinCounts.fileCount++;
-                    // Don't have a kotlin-specific counter yet and Java count should be very close
-                    kotlinCounts.lineCount += org.openrewrite.java.CountLinesVisitor.countLines(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Kotlin",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            kotlinCounts.lineCount,
-                            hasParseFailure));
-                } else if (s instanceof G) {
-                    Counts groovyCounts = acc.getMap().computeIfAbsent("Groovy", k -> new Counts());
-                    groovyCounts.fileCount++;
-                    groovyCounts.lineCount += org.openrewrite.groovy.CountLinesVisitor.countLines(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Groovy",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            groovyCounts.lineCount,
-                            hasParseFailure));
-                } else if (s instanceof Py) {
-                    Counts pythonCounts = acc.getMap().computeIfAbsent("Python", k -> new Counts());
-                    pythonCounts.fileCount++;
-                    pythonCounts.lineCount += genericLineCount(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Python",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            pythonCounts.lineCount,
-                            hasParseFailure));
-                } else if (s instanceof J) {
-                    Counts javaCounts = acc.getMap().computeIfAbsent("Java", k -> new Counts());
-                    javaCounts.fileCount++;
-                    javaCounts.lineCount += org.openrewrite.java.CountLinesVisitor.countLines(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Java",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            javaCounts.lineCount,
-                            hasParseFailure));
-                } else if (s instanceof Json) {
-                    Counts jsonCounts = acc.getMap().computeIfAbsent("Json", k -> new Counts());
-                    jsonCounts.fileCount++;
-                    jsonCounts.lineCount += org.openrewrite.json.CountLinesVisitor.countLines(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Json",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            jsonCounts.lineCount,
-                            hasParseFailure));
-                } else if (s instanceof Hcl) {
-                    Counts hclCounts = acc.getMap().computeIfAbsent("Hcl", k -> new Counts());
-                    hclCounts.fileCount++;
-                    hclCounts.lineCount += org.openrewrite.hcl.CountLinesVisitor.countLines(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Hcl",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            hclCounts.lineCount,
-                            hasParseFailure));
-                } else if (s instanceof Properties) {
-                    Counts propertiesCounts = acc.getMap().computeIfAbsent("Properties", k -> new Counts());
-                    propertiesCounts.fileCount++;
-                    propertiesCounts.lineCount += org.openrewrite.properties.CountLinesVisitor.countLines(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Properties",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            propertiesCounts.lineCount,
-                            hasParseFailure));
-                } else if (s instanceof Proto) {
-                    Counts protobufCounts = acc.getMap().computeIfAbsent("Protobuf", k -> new Counts());
-                    protobufCounts.fileCount++;
-                    protobufCounts.lineCount += org.openrewrite.protobuf.CountLinesVisitor.countLines(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Protobuf",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            protobufCounts.lineCount,
-                            hasParseFailure));
-                } else if (s instanceof Xml) {
-                    Counts xmlCounts = acc.getMap().computeIfAbsent("Xml", k -> new Counts());
-                    xmlCounts.fileCount++;
-                    xmlCounts.lineCount += org.openrewrite.xml.CountLinesVisitor.countLines(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Xml",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            xmlCounts.lineCount,
-                            hasParseFailure));
-                } else if (s instanceof Yaml) {
-                    Counts yamlCounts = acc.getMap().computeIfAbsent("Yaml", k -> new Counts());
-                    yamlCounts.fileCount++;
-                    yamlCounts.lineCount += org.openrewrite.yaml.CountLinesVisitor.countLines(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Yaml",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            yamlCounts.lineCount,
-                            hasParseFailure));
-                } else if (s instanceof PlainText) {
-                    Counts plainTextCounts = acc.getMap().computeIfAbsent("Plain text", k -> new Counts());
-                    plainTextCounts.fileCount++;
-                    plainTextCounts.lineCount += genericLineCount(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Plain text",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            plainTextCounts.lineCount,
-                            hasParseFailure));
                 } else {
-                    Counts unknownCounts = acc.getMap().computeIfAbsent("Unknown", k -> new Counts());
-                    unknownCounts.fileCount++;
-                    unknownCounts.lineCount += genericLineCount(s);
-                    perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                            s.getSourcePath().toString(),
-                            "Unknown",
-                            s.getClass().getName(),
-                            s.getWeight(id -> acc.getIds().add(System.identityHashCode(id))),
-                            unknownCounts.lineCount,
-                            hasParseFailure));
+                    int genericLineCount = genericLineCount(s);
+                    if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.Cobol")) {
+                        Counts cobolCounts = acc.getMap().computeIfAbsent("Cobol", k -> new Counts());
+                        cobolCounts.fileCount++;
+                        cobolCounts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Cobol",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof K) {
+                        Counts kotlinCounts = acc.getMap().computeIfAbsent("Kotlin", k -> new Counts());
+                        kotlinCounts.fileCount++;
+                        // Don't have a kotlin-specific counter yet and Java count should be very close
+                        kotlinCounts.lineCount += org.openrewrite.java.CountLinesVisitor.countLines(s);
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Kotlin",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof G) {
+                        Counts groovyCounts = acc.getMap().computeIfAbsent("Groovy", k -> new Counts());
+                        groovyCounts.fileCount++;
+                        groovyCounts.lineCount += org.openrewrite.groovy.CountLinesVisitor.countLines(s);
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Groovy",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof Py) {
+                        Counts pythonCounts = acc.getMap().computeIfAbsent("Python", k -> new Counts());
+                        pythonCounts.fileCount++;
+                        pythonCounts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Python",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof J) {
+                        Counts javaCounts = acc.getMap().computeIfAbsent("Java", k -> new Counts());
+                        javaCounts.fileCount++;
+                        javaCounts.lineCount += org.openrewrite.java.CountLinesVisitor.countLines(s);
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Java",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof Json) {
+                        Counts jsonCounts = acc.getMap().computeIfAbsent("Json", k -> new Counts());
+                        jsonCounts.fileCount++;
+                        jsonCounts.lineCount += org.openrewrite.json.CountLinesVisitor.countLines(s);
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Json",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof Hcl) {
+                        Counts hclCounts = acc.getMap().computeIfAbsent("Hcl", k -> new Counts());
+                        hclCounts.fileCount++;
+                        hclCounts.lineCount += org.openrewrite.hcl.CountLinesVisitor.countLines(s);
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Hcl",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof Properties) {
+                        Counts propertiesCounts = acc.getMap().computeIfAbsent("Properties", k -> new Counts());
+                        propertiesCounts.fileCount++;
+                        propertiesCounts.lineCount += org.openrewrite.properties.CountLinesVisitor.countLines(s);
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Properties",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof Proto) {
+                        Counts protobufCounts = acc.getMap().computeIfAbsent("Protobuf", k -> new Counts());
+                        protobufCounts.fileCount++;
+                        protobufCounts.lineCount += org.openrewrite.protobuf.CountLinesVisitor.countLines(s);
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Protobuf",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof Xml) {
+                        Counts xmlCounts = acc.getMap().computeIfAbsent("Xml", k -> new Counts());
+                        xmlCounts.fileCount++;
+                        xmlCounts.lineCount += org.openrewrite.xml.CountLinesVisitor.countLines(s);
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Xml",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof Yaml) {
+                        Counts yamlCounts = acc.getMap().computeIfAbsent("Yaml", k -> new Counts());
+                        yamlCounts.fileCount++;
+                        yamlCounts.lineCount += org.openrewrite.yaml.CountLinesVisitor.countLines(s);
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Yaml",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof PlainText) {
+                        Counts plainTextCounts = acc.getMap().computeIfAbsent("Plain text", k -> new Counts());
+                        plainTextCounts.fileCount++;
+                        plainTextCounts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Plain text",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else {
+                        Counts unknownCounts = acc.getMap().computeIfAbsent("Unknown", k -> new Counts());
+                        unknownCounts.fileCount++;
+                        unknownCounts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Unknown",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    }
                 }
                 return tree;
             }
