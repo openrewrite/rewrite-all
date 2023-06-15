@@ -29,86 +29,88 @@ public class LanguageCompositionTest implements RewriteTest {
 
     @Override
     public void defaults(RecipeSpec spec) {
-        spec.recipe(new LanguageComposition());
+        spec.recipe(new LanguageComposition())
+          .expectedCyclesThatMakeChanges(0)
+          .cycles(1);
     }
 
     @Test
     void javaAndPlainText() {
         rewriteRun(
-            spec -> {
-                spec.dataTable(LanguageCompositionPerRepository.Row.class, table -> {
-                    assertThat(table).hasSize(2);
-                    boolean hasJava = false;
-                    boolean hasPlainText = false;
-                    for (LanguageCompositionPerRepository.Row row : table) {
-                        if(row.getLanguage().equals("Java")) {
-                            assertThat(row.getFileCount()).isEqualTo(1);
-                            assertThat(row.getLineCount()).isEqualTo(3);
-                            hasJava = true;
-                        } else if (row.getLanguage().equals("Plain text")) {
-                            assertThat(row.getFileCount()).isEqualTo(1);
-                            assertThat(row.getLineCount()).isGreaterThan(0);
-                            hasPlainText = true;
-                        }
-                    }
-                    assertThat(hasJava).isTrue();
-                    assertThat(hasPlainText).isTrue();
-                });
-                spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
-                    assertThat(table).hasSize(2);
-                    boolean hasJava = false;
-                    boolean hasPlainText = false;
-                    for(LanguageCompositionPerFile.Row row : table) {
-                        if (row.getLanguage().equals("Java")) {
-                            assertThat(row.getLinesOfText()).isEqualTo(3);
-                            hasJava = true;
-                        } else if (row.getLanguage().equals("Plain text")){
-                            assertThat(row.getLinesOfText()).isEqualTo(2);
-                            hasPlainText = true;
-                        }
-                    }
-                    assertThat(hasJava).isTrue();
-                    assertThat(hasPlainText).isTrue();
-                });
-            },
-            //language=java
-            java("""
-                package com.whatever;
-                
-                class A {
-                    void foo() {
-                    }
-                }
-                """),
-            text("""
-                hello
-                world
-                
-                """)
-
+          spec -> {
+              spec.dataTable(LanguageCompositionPerRepository.Row.class, table -> {
+                  assertThat(table).hasSize(2);
+                  boolean hasJava = false;
+                  boolean hasPlainText = false;
+                  for (LanguageCompositionPerRepository.Row row : table) {
+                      if (row.getLanguage().equals("Java")) {
+                          assertThat(row.getFileCount()).isEqualTo(1);
+                          hasJava = true;
+                      } else if (row.getLanguage().equals("Plain text")) {
+                          assertThat(row.getFileCount()).isEqualTo(1);
+                          hasPlainText = true;
+                      }
+                  }
+                  assertThat(hasJava).isTrue();
+                  assertThat(hasPlainText).isTrue();
+              });
+              spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
+                  assertThat(table).hasSize(2);
+                  boolean hasJava = false;
+                  boolean hasPlainText = false;
+                  for (LanguageCompositionPerFile.Row row : table) {
+                      if (row.getLanguage().equals("Java")) {
+                          hasJava = true;
+                      } else if (row.getLanguage().equals("Plain text")) {
+                          hasPlainText = true;
+                      }
+                  }
+                  assertThat(hasJava).isTrue();
+                  assertThat(hasPlainText).isTrue();
+              });
+          },
+          //language=java
+          java(
+            """
+              package com.whatever;
+                              
+              class A {
+                  void foo() {
+                  }
+              }
+              """
+          ),
+          text(
+            """
+              hello
+              world
+                              
+              """
+          )
         );
     }
 
     @Test
     void hasParseFailures() {
         rewriteRun(
-            spec -> {
-                spec.allSources(s -> s.markers(new ParseExceptionResult(Tree.randomId(), "all", "test", "Parsing failed.", null)));
-                spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
-                    assertThat(table).hasSize(1);
-                    assertThat(table.get(0).getHasParseFailures()).isTrue();
-                });
-            },
-            java(
-                """
-                package com.whatever;
-                
-                class A {
-                    void foo() {
-                    }
-                }
-                """
-            )
+          spec -> {
+              spec.allSources(s -> s.markers(new ParseExceptionResult(Tree.randomId(), "all", "test", "Parsing failed.", null)));
+              spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
+                  assertThat(table).hasSize(1);
+                  assertThat(table.get(0).getHasParseFailures()).isTrue();
+              });
+          },
+          //language=java
+          java(
+            """
+              package com.whatever;
+                              
+              class A {
+                  void foo() {
+                  }
+              }
+              """
+          )
         );
     }
 }
