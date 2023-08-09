@@ -238,7 +238,7 @@ public class OmniParser implements Parser {
         private Consumer<Integer> onParse = inputCount -> {
         };
 
-        private List<Parser> parsers = Arrays.asList(
+        private List<Parser> parsers = new ArrayList<>(Arrays.asList(
                 new JsonParser(),
                 new XmlParser(),
                 new YamlParser(),
@@ -247,7 +247,7 @@ public class OmniParser implements Parser {
                 HclParser.builder().build(),
                 new PlainTextParser(),
                 new QuarkParser()
-        );
+        ));
 
         public Builder() {
             super(SourceFile.class);
