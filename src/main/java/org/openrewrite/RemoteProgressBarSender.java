@@ -25,20 +25,21 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class RemoteProgressBarSender implements ProgressBar {
-    final static int PORT = 37245; // moderne blue % 65535 :)
     final static int MAX_MESSAGE_SIZE = 256;
 
     private final DatagramSocket socket;
     private final InetAddress address;
+    private final int port;
 
-    public RemoteProgressBarSender() {
-        this(null);
+    public RemoteProgressBarSender(int port) {
+        this(null, port);
     }
 
-    public RemoteProgressBarSender(@Nullable InetAddress address) {
+    public RemoteProgressBarSender(@Nullable InetAddress address, int port) {
         try {
             String localhost = Files.exists(Paths.get("/.dockerenv")) ? "host.docker.internal" : "localhost";
             this.address = address == null ? InetAddress.getByName(localhost) : address;
+            this.port = port;
             this.socket = new DatagramSocket();
         } catch (UnknownHostException | SocketException e) {
             throw new UncheckedIOException(e);
@@ -52,12 +53,12 @@ public class RemoteProgressBarSender implements ProgressBar {
 
     @Override
     public void finish(String message) {
-        send(Request.Type.Finish, message);
+        throw new UnsupportedOperationException("The finish message must be determined by the receiver");
     }
 
     @Override
     public void close() {
-        send(Request.Type.Close, null);
+        socket.close();
     }
 
     @Override
@@ -73,7 +74,7 @@ public class RemoteProgressBarSender implements ProgressBar {
 
     @Override
     public ProgressBar setMax(int max) {
-        send(Request.Type.SetMax, null);
+        send(Request.Type.SetMax, Integer.toString(max));
         return this;
     }
 
@@ -83,7 +84,7 @@ public class RemoteProgressBarSender implements ProgressBar {
                 throw new IllegalArgumentException("Message size exceeded maximum length: " + message);
             }
             byte[] buf = (type.ordinal() + (message == null ? "" : message)).getBytes();
-            DatagramPacket packet = new DatagramPacket(buf, buf.length, address, PORT);
+            DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
             socket.send(packet);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -94,8 +95,6 @@ public class RemoteProgressBarSender implements ProgressBar {
     static class Request {
         enum Type {
             IntermediateResult,
-            Finish,
-            Close,
             Step,
             SetExtraMessage,
             SetMax

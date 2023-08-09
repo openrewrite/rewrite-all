@@ -23,69 +23,78 @@ import java.io.UncheckedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import static org.openrewrite.RemoteProgressBarSender.MAX_MESSAGE_SIZE;
 import static java.util.Objects.requireNonNull;
+import static org.openrewrite.RemoteProgressBarSender.MAX_MESSAGE_SIZE;
 
 public class RemoteProgressBarReceiver implements ProgressBar {
-    private final ProgressBar delegate;
+    private static final ExecutorService PROGRESS_RECEIVER_POOL = Executors.newCachedThreadPool();
 
+    private final ProgressBar delegate;
     private final DatagramSocket socket;
 
     public RemoteProgressBarReceiver(ProgressBar delegate) {
         this.delegate = delegate;
         try {
-            this.socket = new DatagramSocket(RemoteProgressBarSender.PORT);
+            this.socket = new DatagramSocket();
+            PROGRESS_RECEIVER_POOL.submit(this::receive);
         } catch (SocketException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    public void run() {
-        try {
-            byte[] buf = new byte[MAX_MESSAGE_SIZE]; // no message should be longer than a terminal line length
-            DatagramPacket packet = new DatagramPacket(buf, buf.length);
-            socket.receive(packet);
+    public int getPort() {
+        return socket.getLocalPort();
+    }
 
-            Type type = null;
-            for (Type t : Type.values()) {
-                if (t.ordinal() == buf[0]) {
-                    type = t;
+    public void receive() {
+        try {
+            for (; ; ) {
+                byte[] buf = new byte[MAX_MESSAGE_SIZE]; // no message should be longer than a terminal line length
+                DatagramPacket packet = new DatagramPacket(buf, buf.length);
+                try {
+                    socket.receive(packet);
+                } catch (SocketTimeoutException ignored) {
                     break;
                 }
-            }
 
-            if (type == null) {
-                return;
-            }
+                Type type = null;
+                for (Type t : Type.values()) {
+                    if (t.ordinal() == buf[0] - '0') {
+                        type = t;
+                        break;
+                    }
+                }
 
-            String message = null;
-            if (packet.getLength() > 1) {
-                message = new String(Arrays.copyOfRange(buf, 1, packet.getLength()),
-                        StandardCharsets.UTF_8);
-            }
+                if (type == null) {
+                    return;
+                }
 
-            switch (type) {
-                case IntermediateResult:
-                    delegate.intermediateResult(message);
-                    break;
-                case Finish:
-                    delegate.finish(message);
-                    break;
-                case Close:
-                    delegate.close();
-                    break;
-                case Step:
-                    delegate.step();
-                    break;
-                case SetExtraMessage:
-                    delegate.setExtraMessage(message);
-                    break;
-                case SetMax:
-                    delegate.setMax(Integer.parseInt(requireNonNull(message)));
-                    break;
+                String message = null;
+                if (packet.getLength() > 1) {
+                    message = new String(Arrays.copyOfRange(buf, 1, packet.getLength()),
+                            StandardCharsets.UTF_8);
+                }
+
+                switch (type) {
+                    case IntermediateResult:
+                        delegate.intermediateResult(message);
+                        break;
+                    case Step:
+                        delegate.step();
+                        break;
+                    case SetExtraMessage:
+                        delegate.setExtraMessage(requireNonNull(message));
+                        break;
+                    case SetMax:
+                        delegate.setMax(Integer.parseInt(requireNonNull(message)));
+                        break;
+                }
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -119,5 +128,6 @@ public class RemoteProgressBarReceiver implements ProgressBar {
 
     @Override
     public void close() {
+        socket.close();
     }
 }
