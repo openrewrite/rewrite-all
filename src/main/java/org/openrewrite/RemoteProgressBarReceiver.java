@@ -15,7 +15,7 @@
  */
 package org.openrewrite;
 
-import io.moderne.commons.ui.RemoteProgressBarSender.Request.Type;
+import org.openrewrite.RemoteProgressBarSender.Request.Type;
 import org.openrewrite.internal.lang.Nullable;
 
 import java.io.IOException;
@@ -26,7 +26,7 @@ import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import static io.moderne.commons.ui.RemoteProgressBarSender.MAX_MESSAGE_SIZE;
+import static org.openrewrite.RemoteProgressBarSender.MAX_MESSAGE_SIZE;
 import static java.util.Objects.requireNonNull;
 
 public class RemoteProgressBarReceiver implements ProgressBar {
