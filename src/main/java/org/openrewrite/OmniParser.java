@@ -63,7 +63,6 @@ public class OmniParser implements Parser {
     private final Collection<PathMatcher> plainTextMasks;
     private final boolean parallel;
     private final List<Parser> parsers;
-    private final Consumer<Path> onParseStart;
     private final Consumer<Integer> onParse;
 
     public Stream<SourceFile> parseAll(Path rootDir) {
@@ -134,7 +133,6 @@ public class OmniParser implements Parser {
             Path path = input.getPath();
             for (Parser parser : parsers) {
                 if (parser.accept(path)) {
-                    onParseStart.accept(path);
                     return parser.parseInputs(Collections.singletonList(input), relativeTo, ctx);
                 }
             }
@@ -233,8 +231,6 @@ public class OmniParser implements Parser {
         private Collection<Path> excludedDirectories = emptyList();
         private Collection<PathMatcher> plainTextMasks = emptyList();
         private boolean parallel;
-        private Consumer<Path> onParseStart = path -> {
-        };
         private Consumer<Integer> onParse = inputCount -> {
         };
 
@@ -278,11 +274,6 @@ public class OmniParser implements Parser {
             return this;
         }
 
-        public Builder onParseStart(Consumer<Path> onParseStart) {
-            this.onParseStart = onParseStart;
-            return this;
-        }
-
         public Builder onParse(Consumer<Integer> onParse) {
             this.onParse = onParse;
             return this;
@@ -313,7 +304,7 @@ public class OmniParser implements Parser {
         @Override
         public OmniParser build() {
             return new OmniParser(exclusions, exclusionMatchers, sizeThresholdMb,
-                    excludedDirectories, plainTextMasks, parallel, parsers, onParseStart, onParse);
+                    excludedDirectories, plainTextMasks, parallel, parsers, onParse);
         }
 
         @Override
