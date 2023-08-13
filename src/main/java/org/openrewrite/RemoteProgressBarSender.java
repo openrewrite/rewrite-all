@@ -16,6 +16,7 @@
 package org.openrewrite;
 
 import lombok.Value;
+import org.openrewrite.internal.StringUtils;
 import org.openrewrite.internal.lang.Nullable;
 
 import java.io.IOException;
@@ -86,6 +87,8 @@ public class RemoteProgressBarSender implements ProgressBar {
             byte[] buf = (type.ordinal() + (message == null ? "" : message)).getBytes();
             DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
             socket.send(packet);
+        } catch (SocketException ignored) {
+            // the remote receiver may not be listening any longer, so ignore
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
