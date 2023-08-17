@@ -34,6 +34,7 @@ import org.openrewrite.table.LanguageCompositionPerFile;
 import org.openrewrite.table.LanguageCompositionPerFolder;
 import org.openrewrite.table.LanguageCompositionPerRepository;
 import org.openrewrite.text.PlainText;
+import org.openrewrite.tree.ParseError;
 import org.openrewrite.xml.tree.Xml;
 import org.openrewrite.yaml.tree.Yaml;
 
@@ -248,6 +249,18 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                                 s.getSourcePath().toString(),
                                 "Plain text",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if(s instanceof ParseError) {
+                        Counts parseErrorCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Parse error", k -> new Counts());
+                        parseErrorCounts.fileCount++;
+                        parseErrorCounts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Parse error",
                                 s.getClass().getName(),
                                 genericLineCount,
                                 hasParseFailure));
