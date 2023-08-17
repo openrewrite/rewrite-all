@@ -23,8 +23,8 @@ import org.openrewrite.Recipe;
 public class LanguageCompositionPerFolder extends DataTable<LanguageCompositionPerFolder.Row> {
 
     public LanguageCompositionPerFolder(Recipe recipe) {
-        super(recipe, "Per-file language composition report",
-                "A list of individual files and their language composition.");
+        super(recipe, "Per-folder language composition report",
+                "A list of folders and the language composition and line counts of their contents.");
     }
 
     @Value
