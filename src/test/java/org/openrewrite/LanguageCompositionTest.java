@@ -17,12 +17,14 @@ package org.openrewrite;
 
 import org.junit.jupiter.api.Test;
 import org.openrewrite.table.LanguageCompositionPerFile;
+import org.openrewrite.table.LanguageCompositionPerFolder;
 import org.openrewrite.table.LanguageCompositionPerRepository;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.openrewrite.java.Assertions.java;
+import static org.openrewrite.test.SourceSpecs.dir;
 import static org.openrewrite.test.SourceSpecs.text;
 
 public class LanguageCompositionTest implements RewriteTest {
@@ -47,7 +49,7 @@ public class LanguageCompositionTest implements RewriteTest {
                           assertThat(row.getFileCount()).isEqualTo(1);
                           hasJava = true;
                       } else if (row.getLanguage().equals("Plain text")) {
-                          assertThat(row.getFileCount()).isEqualTo(1);
+                          assertThat(row.getFileCount()).isEqualTo(2);
                           hasPlainText = true;
                       }
                   }
@@ -55,7 +57,7 @@ public class LanguageCompositionTest implements RewriteTest {
                   assertThat(hasPlainText).isTrue();
               });
               spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
-                  assertThat(table).hasSize(2);
+                  assertThat(table).hasSize(3);
                   boolean hasJava = false;
                   boolean hasPlainText = false;
                   for (LanguageCompositionPerFile.Row row : table) {
@@ -68,23 +70,39 @@ public class LanguageCompositionTest implements RewriteTest {
                   assertThat(hasJava).isTrue();
                   assertThat(hasPlainText).isTrue();
               });
+              spec.dataTable(LanguageCompositionPerFolder.Row.class, table -> {
+                  assertThat(table).hasSize(2);
+                  assertThat(table).contains(
+                    new LanguageCompositionPerFolder.Row("src/java/main/com/whatever", "Java", 1, 3),
+                    new LanguageCompositionPerFolder.Row("", "Plain text", 2, 4)
+                  );
+              });
           },
-          //language=java
-          java(
+          dir("src/java/main",
+            //language=java
+            java(
+              """
+                package com.whatever;
+                
+                class A {
+                    void foo() {
+                    }
+                }
+                """
+            )
+            ),
+          text(
             """
-              package com.whatever;
-                              
-              class A {
-                  void foo() {
-                  }
-              }
+              hello
+              world
+              
               """
           ),
           text(
             """
               hello
               world
-                              
+              
               """
           )
         );

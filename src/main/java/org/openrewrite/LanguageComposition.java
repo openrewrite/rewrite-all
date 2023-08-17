@@ -31,6 +31,7 @@ import org.openrewrite.python.tree.Py;
 import org.openrewrite.quark.Quark;
 import org.openrewrite.remote.Remote;
 import org.openrewrite.table.LanguageCompositionPerFile;
+import org.openrewrite.table.LanguageCompositionPerFolder;
 import org.openrewrite.table.LanguageCompositionPerRepository;
 import org.openrewrite.text.PlainText;
 import org.openrewrite.xml.tree.Xml;
@@ -42,7 +43,8 @@ import java.util.*;
 @EqualsAndHashCode(callSuper = true)
 public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accumulator> {
 
-    transient LanguageCompositionPerRepository report = new LanguageCompositionPerRepository(this);
+    transient LanguageCompositionPerRepository perRepositoryReport = new LanguageCompositionPerRepository(this);
+    transient LanguageCompositionPerFolder perFolderReport = new LanguageCompositionPerFolder(this);
     transient LanguageCompositionPerFile perFileReport = new LanguageCompositionPerFile(this);
 
     @Override
@@ -61,7 +63,16 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
 
     @Data
     static class Accumulator {
-        Map<String, Counts> map = new HashMap<>();
+        Map<String, Map<String, Counts>> folderToLanguageToCounts = new HashMap<>();
+    }
+
+    private static String containingFolderPath(SourceFile s) {
+        String sourcePath = PathUtils.separatorsToUnix(s.getSourcePath().toString());
+        int lastSlash = sourcePath.lastIndexOf('/');
+        if(lastSlash == -1) {
+            return "";
+        }
+        return sourcePath.substring(0, lastSlash);
     }
 
     @Override
@@ -79,10 +90,13 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                 }
 
                 SourceFile s = (SourceFile) tree;
+                String folderPath = containingFolderPath(s);
                 // Parse failures *should* only ever appear on PlainText sources, but always checking finds a parser bug
                 boolean hasParseFailure = s.getMarkers().findFirst(ParseExceptionResult.class).isPresent();
                 if (s instanceof Quark || s instanceof Binary || s instanceof Remote) {
-                    Counts quarkCounts = acc.getMap().computeIfAbsent("Other/unknown/unparseable", k -> new Counts());
+                    Counts quarkCounts = acc.getFolderToLanguageToCounts()
+                            .computeIfAbsent(folderPath, k -> new HashMap<>())
+                            .computeIfAbsent("Other/unknown/unparseable", k -> new Counts());
                     quarkCounts.fileCount++;
                     perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                             s.getSourcePath().toString(),
@@ -93,7 +107,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                 } else {
                     int genericLineCount = genericLineCount(s);
                     if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.Cobol")) {
-                        Counts cobolCounts = acc.getMap().computeIfAbsent("Cobol", k -> new Counts());
+                        Counts cobolCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Cobol", k -> new Counts());
                         cobolCounts.fileCount++;
                         cobolCounts.lineCount += genericLineCount;
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -103,7 +119,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof K) {
-                        Counts kotlinCounts = acc.getMap().computeIfAbsent("Kotlin", k -> new Counts());
+                        Counts kotlinCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Kotlin", k -> new Counts());
                         kotlinCounts.fileCount++;
                         // Don't have a kotlin-specific counter yet and Java count should be very close
                         kotlinCounts.lineCount += org.openrewrite.java.CountLinesVisitor.countLines(s);
@@ -114,7 +132,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof G) {
-                        Counts groovyCounts = acc.getMap().computeIfAbsent("Groovy", k -> new Counts());
+                        Counts groovyCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Groovy", k -> new Counts());
                         groovyCounts.fileCount++;
                         groovyCounts.lineCount += org.openrewrite.groovy.CountLinesVisitor.countLines(s);
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -124,7 +144,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof Py) {
-                        Counts pythonCounts = acc.getMap().computeIfAbsent("Python", k -> new Counts());
+                        Counts pythonCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Python", k -> new Counts());
                         pythonCounts.fileCount++;
                         pythonCounts.lineCount += genericLineCount;
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -134,7 +156,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof J) {
-                        Counts javaCounts = acc.getMap().computeIfAbsent("Java", k -> new Counts());
+                        Counts javaCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Java", k -> new Counts());
                         javaCounts.fileCount++;
                         javaCounts.lineCount += org.openrewrite.java.CountLinesVisitor.countLines(s);
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -144,7 +168,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof Json) {
-                        Counts jsonCounts = acc.getMap().computeIfAbsent("Json", k -> new Counts());
+                        Counts jsonCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Json", k -> new Counts());
                         jsonCounts.fileCount++;
                         jsonCounts.lineCount += org.openrewrite.json.CountLinesVisitor.countLines(s);
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -154,7 +180,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof Hcl) {
-                        Counts hclCounts = acc.getMap().computeIfAbsent("Hcl", k -> new Counts());
+                        Counts hclCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Hcl", k -> new Counts());
                         hclCounts.fileCount++;
                         hclCounts.lineCount += org.openrewrite.hcl.CountLinesVisitor.countLines(s);
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -164,7 +192,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof Properties) {
-                        Counts propertiesCounts = acc.getMap().computeIfAbsent("Properties", k -> new Counts());
+                        Counts propertiesCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Properties", k -> new Counts());
                         propertiesCounts.fileCount++;
                         propertiesCounts.lineCount += org.openrewrite.properties.CountLinesVisitor.countLines(s);
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -174,7 +204,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof Proto) {
-                        Counts protobufCounts = acc.getMap().computeIfAbsent("Protobuf", k -> new Counts());
+                        Counts protobufCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Protobuf", k -> new Counts());
                         protobufCounts.fileCount++;
                         protobufCounts.lineCount += org.openrewrite.protobuf.CountLinesVisitor.countLines(s);
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -184,7 +216,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof Xml) {
-                        Counts xmlCounts = acc.getMap().computeIfAbsent("Xml", k -> new Counts());
+                        Counts xmlCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Xml", k -> new Counts());
                         xmlCounts.fileCount++;
                         xmlCounts.lineCount += org.openrewrite.xml.CountLinesVisitor.countLines(s);
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -194,7 +228,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof Yaml) {
-                        Counts yamlCounts = acc.getMap().computeIfAbsent("Yaml", k -> new Counts());
+                        Counts yamlCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Yaml", k -> new Counts());
                         yamlCounts.fileCount++;
                         yamlCounts.lineCount += org.openrewrite.yaml.CountLinesVisitor.countLines(s);
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -204,7 +240,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof PlainText) {
-                        Counts plainTextCounts = acc.getMap().computeIfAbsent("Plain text", k -> new Counts());
+                        Counts plainTextCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Plain text", k -> new Counts());
                         plainTextCounts.fileCount++;
                         plainTextCounts.lineCount += genericLineCount;
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -214,7 +252,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else {
-                        Counts unknownCounts = acc.getMap().computeIfAbsent("Unknown", k -> new Counts());
+                        Counts unknownCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Unknown", k -> new Counts());
                         unknownCounts.fileCount++;
                         unknownCounts.lineCount += genericLineCount;
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -232,9 +272,21 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
 
     @Override
     public Collection<? extends SourceFile> generate(Accumulator acc, ExecutionContext ctx) {
-        for (Map.Entry<String, Counts> entry : acc.getMap().entrySet()) {
-            report.insertRow(ctx, new LanguageCompositionPerRepository.Row(entry.getKey(), entry.getValue().fileCount, entry.getValue().lineCount));
+        Map<String, Counts> languageToCount = new HashMap<>();
+        for (Map.Entry<String, Map<String, Counts>> entry : acc.getFolderToLanguageToCounts().entrySet()) {
+            for (Map.Entry<String, Counts> languageEntry : entry.getValue().entrySet()) {
+                perFolderReport.insertRow(ctx, new LanguageCompositionPerFolder.Row(entry.getKey(),
+                        languageEntry.getKey(), languageEntry.getValue().fileCount, languageEntry.getValue().lineCount));
+
+                Counts counts = languageToCount.computeIfAbsent(languageEntry.getKey(), k -> new Counts());
+                counts.fileCount += languageEntry.getValue().fileCount;
+                counts.lineCount += languageEntry.getValue().lineCount;
+            }
         }
+        for (Map.Entry<String, Counts> entry : languageToCount.entrySet()) {
+            perRepositoryReport.insertRow(ctx, new LanguageCompositionPerRepository.Row(entry.getKey(), entry.getValue().fileCount, entry.getValue().lineCount));
+        }
+
         return Collections.emptyList();
     }
 
