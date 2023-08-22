@@ -107,7 +107,19 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                             hasParseFailure));
                 } else {
                     int genericLineCount = genericLineCount(s);
-                    if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.Cobol")) {
+                    if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.CobolPreprocessor$Copybook")) {
+                        Counts copybookCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Copybook", k -> new Counts());
+                        copybookCounts.fileCount++;
+                        copybookCounts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Copybook",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.Cobol")) {
                         Counts cobolCounts = acc.getFolderToLanguageToCounts()
                                 .computeIfAbsent(folderPath, k -> new HashMap<>())
                                 .computeIfAbsent("Cobol", k -> new Counts());
