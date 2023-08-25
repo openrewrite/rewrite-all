@@ -32,6 +32,10 @@ import java.util.concurrent.Executors;
 import static java.util.Objects.requireNonNull;
 import static org.openrewrite.RemoteProgressBarSender.MAX_MESSAGE_SIZE;
 
+/**
+ * @deprecated This class has been moved to rewrite-polyglot.
+ */
+@Deprecated
 public class RemoteProgressBarReceiver implements ProgressBar {
     private static final ExecutorService PROGRESS_RECEIVER_POOL = Executors.newCachedThreadPool();
 

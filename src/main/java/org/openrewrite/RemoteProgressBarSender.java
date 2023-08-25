@@ -25,6 +25,10 @@ import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+/**
+ * @deprecated This class has been moved to rewrite-polyglot.
+ */
+@Deprecated
 public class RemoteProgressBarSender implements ProgressBar {
     final static int MAX_MESSAGE_SIZE = 256;
 

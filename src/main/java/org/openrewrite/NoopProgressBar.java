@@ -17,6 +17,10 @@ package org.openrewrite;
 
 import org.openrewrite.internal.lang.Nullable;
 
+/**
+ * @deprecated This class has been moved to rewrite-polyglot.
+ */
+@Deprecated
 public class NoopProgressBar implements ProgressBar {
     @Override
     public void intermediateResult(@Nullable String message) {

@@ -23,6 +23,10 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * @deprecated This class has been moved to rewrite-polyglot.
+ */
+@Deprecated
 public class RemoteProgressBarTest {
 
     @Test

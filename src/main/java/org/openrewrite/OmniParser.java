@@ -40,6 +40,10 @@ import java.util.stream.StreamSupport;
 
 import static java.util.Collections.emptyList;
 
+/**
+ * @deprecated This class has been moved to rewrite-polyglot.
+ */
+@Deprecated
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class OmniParser implements Parser {
     private static final Collection<String> DEFAULT_IGNORED_DIRECTORIES = Arrays.asList(
