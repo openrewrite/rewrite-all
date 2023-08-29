@@ -147,7 +147,8 @@ public class FindCallGraph extends Recipe {
                         to.getDeclaringType().getFullyQualifiedName(),
                         to.getName(),
                         parameters(to),
-                        resourceType(to)
+                        resourceType(to),
+                        returnType(to)
                 );
             }
 
@@ -161,7 +162,8 @@ public class FindCallGraph extends Recipe {
                         to.getDeclaringType().getFullyQualifiedName(),
                         to.getName(),
                         parameters(to),
-                        resourceType(to)
+                        resourceType(to),
+                        returnType(to)
                 );
             }
         };
@@ -182,5 +184,9 @@ public class FindCallGraph extends Recipe {
             return CallGraph.ResourceType.CONSTRUCTOR;
         }
         return CallGraph.ResourceType.METHOD;
+    }
+
+    private static String returnType(JavaType.Method method) {
+        return method.getReturnType().toString();
     }
 }

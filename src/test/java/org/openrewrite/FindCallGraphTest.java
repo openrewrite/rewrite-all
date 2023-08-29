@@ -46,7 +46,8 @@ public class FindCallGraphTest implements RewriteTest {
                 "java.io.PrintStream",
                 "println",
                 "java.lang.String",
-                CallGraph.ResourceType.METHOD
+                CallGraph.ResourceType.METHOD,
+                "void"
               ),
               new CallGraph.Row(
                 "Test",
@@ -57,7 +58,8 @@ public class FindCallGraphTest implements RewriteTest {
                 "java.io.PrintStream",
                 "println",
                 "java.lang.String",
-                CallGraph.ResourceType.METHOD
+                CallGraph.ResourceType.METHOD,
+                "void"
               )
             )
           ),
@@ -96,7 +98,8 @@ public class FindCallGraphTest implements RewriteTest {
                   "Test",
                   "test",
                   "",
-                  CallGraph.ResourceType.METHOD
+                  CallGraph.ResourceType.METHOD,
+                  "void"
                 )
               )),
           //language=java
@@ -130,7 +133,8 @@ public class FindCallGraphTest implements RewriteTest {
                 "Scratch",
                 "bar",
                 "",
-                CallGraph.ResourceType.METHOD
+                CallGraph.ResourceType.METHOD,
+                "int"
               ),
               new CallGraph.Row(
                 "Scratch",
@@ -141,7 +145,8 @@ public class FindCallGraphTest implements RewriteTest {
                 "Scratch",
                 "foo",
                 "",
-                CallGraph.ResourceType.METHOD
+                CallGraph.ResourceType.METHOD,
+                "void"
               )
             )
           ),
@@ -173,7 +178,8 @@ public class FindCallGraphTest implements RewriteTest {
                 "Scratch",
                 "bar",
                 "",
-                CallGraph.ResourceType.METHOD
+                CallGraph.ResourceType.METHOD,
+                "int"
               ),
               new CallGraph.Row(
                 "Scratch",
@@ -184,7 +190,8 @@ public class FindCallGraphTest implements RewriteTest {
                 "Scratch",
                 "foo",
                 "",
-                CallGraph.ResourceType.METHOD
+                CallGraph.ResourceType.METHOD,
+                "int"
               )
             )
           ),
@@ -218,7 +225,8 @@ public class FindCallGraphTest implements RewriteTest {
                 "A$C",
                 "<constructor>",
                 "",
-                CallGraph.ResourceType.CONSTRUCTOR
+                CallGraph.ResourceType.CONSTRUCTOR,
+                "A$C"
               ),
               new CallGraph.Row(
                 "A$B",
@@ -229,7 +237,8 @@ public class FindCallGraphTest implements RewriteTest {
                 "A$C",
                 "c",
                 "",
-                CallGraph.ResourceType.METHOD
+                CallGraph.ResourceType.METHOD,
+                "void"
               )
             )
           ),
@@ -265,7 +274,8 @@ public class FindCallGraphTest implements RewriteTest {
                 "kotlin.io.ConsoleKt",
                 "println",
                 "kotlin.Any",
-                CallGraph.ResourceType.METHOD
+                CallGraph.ResourceType.METHOD,
+                "kotlin.Unit"
               )
             )
           ),

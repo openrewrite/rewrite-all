@@ -68,6 +68,10 @@ public class CallGraph extends DataTable<CallGraph.Row> {
         @Column(displayName = "To type",
                 description = "The type of resource being accessed.")
         ResourceType toType;
+
+        @Column(displayName = "Return type",
+                description = "The return type of the method.")
+        String returnType;
     }
 
     public enum ResourceType {
