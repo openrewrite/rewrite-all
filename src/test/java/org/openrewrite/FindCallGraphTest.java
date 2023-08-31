@@ -261,6 +261,44 @@ public class FindCallGraphTest implements RewriteTest {
     }
 
     @Test
+    void anonymousClass() {
+        rewriteRun(
+          spec -> spec.dataTable(CallGraph.Row.class, row ->
+            assertThat(row).containsExactly(
+              new CallGraph.Row(
+                "B",
+                "call",
+                "",
+                CallGraph.ResourceType.METHOD,
+                CallGraph.ResourceAction.CALL,
+                "A",
+                "method",
+                "",
+                CallGraph.ResourceType.METHOD,
+                "void"
+              )
+            )
+          ),
+          java("""
+            class A {
+                public void method() {}
+            }
+            class B {
+                private A a = new A() {
+                    @Override
+                    public void method() {
+                        System.out.println("Hello, world!");
+                    }
+                };
+                void call() {
+                    a.method();
+                }
+            }
+            """)
+        );
+    }
+
+    @Test
     void companionObject() {
         rewriteRun(
           spec -> spec.dataTable(CallGraph.Row.class, row ->

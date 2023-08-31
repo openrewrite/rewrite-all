@@ -119,12 +119,13 @@ public class FindCallGraph extends Recipe {
                 J.MethodDeclaration declaration = getCursor().firstEnclosing(J.MethodDeclaration.class);
                 if (declaration == null) {
                     J.ClassDeclaration classDecl = getCursor().firstEnclosing(J.ClassDeclaration.class);
-                    if (classDecl != null && classDecl.getType() != null &&
+                    if (classDecl != null && classDecl.getType() != null && isValidMethodCall(method) &&
                         ((inInitializer && methodsCalledInit.add(method))
                          || (inStaticInitializer && methodsCalledClassInit.add(method)))) {
                         callGraph.insertRow(ctx, row(classDecl.getType(), method));
                     }
-                } else if (declaration.getMethodType() != null && methodsCalledInScope.add(method)) {
+                } else if (declaration.getMethodType() != null && methodsCalledInScope.add(method) &&
+                        isValidMethodCall(declaration.getMethodType(), method)) {
                     callGraph.insertRow(ctx, row(declaration.getMethodType(), method));
                 }
             }
@@ -165,6 +166,26 @@ public class FindCallGraph extends Recipe {
                         resourceType(to),
                         returnType(to)
                 );
+            }
+
+            private boolean isValidMethodCall(JavaType.Method to) {
+                return isNotAnonymousClass(to.getDeclaringType().getFullyQualifiedName());
+            }
+
+            private boolean isValidMethodCall(JavaType.Method from, JavaType.Method to) {
+                return isNotAnonymousClass(from.getDeclaringType().getFullyQualifiedName()) &&
+                        isNotAnonymousClass(to.getDeclaringType().getFullyQualifiedName());
+            }
+
+            private boolean isNotAnonymousClass(String fqn) {
+                if (fqn.contains("$")) {
+                    try {
+                        Integer.valueOf(fqn.substring(fqn.lastIndexOf("$") + 1));
+                        return false;
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                return true;
             }
         };
 
