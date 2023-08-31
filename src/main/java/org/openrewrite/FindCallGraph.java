@@ -179,11 +179,14 @@ public class FindCallGraph extends Recipe {
 
             private boolean isNotAnonymousClass(String fqn) {
                 if (fqn.contains("$")) {
-                    try {
-                        Integer.valueOf(fqn.substring(fqn.lastIndexOf("$") + 1));
-                        return false;
-                    } catch (NumberFormatException ignored) {
+                    for (String s : fqn.split("\\$")) {
+                        try {
+                            Integer.valueOf(s);
+                            return false;
+                        } catch (NumberFormatException ignored) {
+                        }
                     }
+
                 }
                 return true;
             }
