@@ -70,7 +70,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
     private static String containingFolderPath(SourceFile s) {
         String sourcePath = PathUtils.separatorsToUnix(s.getSourcePath().toString());
         int lastSlash = sourcePath.lastIndexOf('/');
-        if(lastSlash == -1) {
+        if (lastSlash == -1) {
             return "";
         }
         return s.getSourcePath().toString().substring(0, lastSlash);
@@ -264,7 +264,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 s.getClass().getName(),
                                 genericLineCount,
                                 hasParseFailure));
-                    } else if(s instanceof ParseError) {
+                    } else if (s instanceof ParseError) {
                         Counts parseErrorCounts = acc.getFolderToLanguageToCounts()
                                 .computeIfAbsent(folderPath, k -> new HashMap<>())
                                 .computeIfAbsent("Parse error", k -> new Counts());
