@@ -21,8 +21,11 @@ import org.openrewrite.table.LanguageCompositionPerFolder;
 import org.openrewrite.table.LanguageCompositionPerRepository;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
+import org.openrewrite.test.SourceSpecs;
+import org.openrewrite.text.PlainText;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.openrewrite.PathUtils.separatorsToSystem;
 import static org.openrewrite.java.Assertions.java;
 import static org.openrewrite.test.SourceSpecs.dir;
 import static org.openrewrite.test.SourceSpecs.text;
@@ -31,9 +34,7 @@ public class LanguageCompositionTest implements RewriteTest {
 
     @Override
     public void defaults(RecipeSpec spec) {
-        spec.recipe(new LanguageComposition())
-          .expectedCyclesThatMakeChanges(0)
-          .cycles(1);
+        spec.recipe(new LanguageComposition());
     }
 
     @Test
@@ -73,7 +74,7 @@ public class LanguageCompositionTest implements RewriteTest {
               spec.dataTable(LanguageCompositionPerFolder.Row.class, table -> {
                   assertThat(table).hasSize(2);
                   assertThat(table).contains(
-                    new LanguageCompositionPerFolder.Row("src/java/main/com/whatever", "Java", 1, 3),
+                    new LanguageCompositionPerFolder.Row(separatorsToSystem("src/java/main/com/whatever"), "Java", 1, 3),
                     new LanguageCompositionPerFolder.Row("", "Plain text", 2, 4)
                   );
               });
@@ -130,5 +131,42 @@ public class LanguageCompositionTest implements RewriteTest {
               """
           )
         );
+    }
+
+    @Test
+    void folderCounts() {
+        rewriteRun(
+          spec -> {
+              spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
+                  assertThat(table).hasSize(3);
+                  assertThat(table).containsOnlyOnce(
+                    new LanguageCompositionPerFile.Row(separatorsToSystem("src/main/file.txt"), "Plain text", PlainText.class.getName(), 2, false),
+                    new LanguageCompositionPerFile.Row(separatorsToSystem("src/resources/file.txt"), "Plain text", PlainText.class.getName(), 3, false),
+                    new LanguageCompositionPerFile.Row(separatorsToSystem("file.txt"), "Plain text", PlainText.class.getName(), 4, false)
+                  );
+              });
+              spec.dataTable(LanguageCompositionPerFolder.Row.class, table -> {
+                  assertThat(table).hasSize(3);
+                  assertThat(table).containsOnlyOnce(
+                    new LanguageCompositionPerFolder.Row(separatorsToSystem("src/main"), "Plain text", 1, 2),
+                    new LanguageCompositionPerFolder.Row(separatorsToSystem("src/resources"), "Plain text", 1, 3),
+                    new LanguageCompositionPerFolder.Row(separatorsToSystem(""), "Plain text", 1, 4)
+                  );
+              });
+          },
+          dir("src",
+            dir("main", textFileWithLineCount(2)),
+            dir("resources", textFileWithLineCount(3))
+          ),
+          textFileWithLineCount(4)
+        );
+    }
+
+    SourceSpecs textFileWithLineCount(int lineCount) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < lineCount; i++) {
+            sb.append("line ").append(i).append("\n");
+        }
+        return text(sb.toString());
     }
 }

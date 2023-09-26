@@ -31,7 +31,7 @@ public class FindDuplicateSourceFiles extends ScanningRecipe<Map<Path, List<Stri
 
     @Override
     public String getDescription() {
-        return "Record the presence of source files that occur more than once in an LST.";
+        return "Record the presence of LSTs with duplicate paths, indicating that the same file was parsed more than once.";
     }
 
     @Override

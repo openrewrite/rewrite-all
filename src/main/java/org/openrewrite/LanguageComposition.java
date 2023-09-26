@@ -63,7 +63,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
     }
 
     @Data
-    static class Accumulator {
+    public static class Accumulator {
         Map<String, Map<String, Counts>> folderToLanguageToCounts = new HashMap<>();
     }
 
@@ -73,7 +73,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
         if(lastSlash == -1) {
             return "";
         }
-        return sourcePath.substring(0, lastSlash);
+        return s.getSourcePath().toString().substring(0, lastSlash);
     }
 
     @Override

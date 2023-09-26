@@ -37,9 +37,9 @@ public class LanguageCompositionPerFile extends DataTable<LanguageCompositionPer
                 description = "The language of the source file.")
         String language;
 
-        @Column(displayName = "Class",
-                description = "The OpenRewrite class that was parsed for this source file.")
-        String parserClass;
+        @Column(displayName = "LST type",
+                description = "The Lossless Semantic Tree type of this source file.")
+        String sourceFileType;
 
         @Column(displayName = "Lines of text",
                 description = "The number of lines of text in the source file. " +
