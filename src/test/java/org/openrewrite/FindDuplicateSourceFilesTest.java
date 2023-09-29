@@ -33,10 +33,12 @@ public class FindDuplicateSourceFilesTest implements RewriteTest {
               assertThat(rows).hasSize(1)),
           text(
             "hello=world",
+            "~~>hello=world",
             spec -> spec.path("hello.properties")
           ),
           properties(
             "hello=world",
+            "~~>hello=world",
             spec -> spec.path("hello.properties")
           )
         );

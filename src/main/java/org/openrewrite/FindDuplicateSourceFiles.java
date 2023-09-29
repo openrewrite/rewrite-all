@@ -16,6 +16,7 @@
 package org.openrewrite;
 
 import org.openrewrite.internal.lang.Nullable;
+import org.openrewrite.marker.SearchResult;
 import org.openrewrite.table.DuplicateSourceFiles;
 
 import java.nio.file.Path;
@@ -65,5 +66,23 @@ public class FindDuplicateSourceFiles extends ScanningRecipe<Map<Path, List<Stri
             }
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public TreeVisitor<?, ExecutionContext> getVisitor(Map<Path, List<String>> acc) {
+        if(acc.isEmpty()) {
+            return TreeVisitor.noop();
+        }
+        return new TreeVisitor<Tree, ExecutionContext>() {
+            @Override
+            public Tree visit(@Nullable Tree tree, ExecutionContext executionContext) {
+                assert tree instanceof SourceFile;
+                SourceFile s = (SourceFile) tree;
+                if(acc.containsKey(s.getSourcePath())) {
+                    s = SearchResult.found(s);
+                }
+                return s;
+            }
+        };
     }
 }
