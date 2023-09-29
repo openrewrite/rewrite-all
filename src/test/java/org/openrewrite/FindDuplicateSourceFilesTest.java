@@ -43,4 +43,15 @@ public class FindDuplicateSourceFilesTest implements RewriteTest {
           )
         );
     }
+
+    @Test
+    void noDupes() {
+        rewriteRun(
+          spec -> spec.recipe(new FindDuplicateSourceFiles()),
+          text(
+            "hello=world",
+            spec -> spec.path("hello.properties")
+          )
+        );
+    }
 }

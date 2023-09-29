@@ -70,15 +70,12 @@ public class FindDuplicateSourceFiles extends ScanningRecipe<Map<Path, List<Stri
 
     @Override
     public TreeVisitor<?, ExecutionContext> getVisitor(Map<Path, List<String>> acc) {
-        if(acc.isEmpty()) {
-            return TreeVisitor.noop();
-        }
         return new TreeVisitor<Tree, ExecutionContext>() {
             @Override
             public Tree visit(@Nullable Tree tree, ExecutionContext executionContext) {
                 assert tree instanceof SourceFile;
                 SourceFile s = (SourceFile) tree;
-                if(acc.containsKey(s.getSourcePath())) {
+                if(acc.containsKey(s.getSourcePath()) && acc.get(s.getSourcePath()).size() > 1) {
                     s = SearchResult.found(s);
                 }
                 return s;
