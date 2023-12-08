@@ -151,7 +151,8 @@ public class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java("""
+          java(
+                """
             class Scratch {
                 static int i = bar();
                 static {
@@ -196,7 +197,8 @@ public class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java("""
+          java(
+                """
             class Scratch {
                 int i = bar();
                 int j;
@@ -243,7 +245,8 @@ public class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java("""
+          java(
+                """
             class A {
                 class B {
                     void b() {
@@ -279,7 +282,8 @@ public class FindCallGraphTest implements RewriteTest {
               )
             )
           ),
-          java("""
+          java(
+                """
             class A {
                 public void method() {}
             }
@@ -318,7 +322,8 @@ public class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=kotlin
-          kotlin("""
+          kotlin(
+                """
             class A {
                 companion object {
                     @JvmStatic
