@@ -27,7 +27,7 @@ import org.openrewrite.java.tree.Statement;
 import java.util.*;
 
 @Value
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class FindCallGraph extends Recipe {
     transient CallGraph callGraph = new CallGraph(this);
 

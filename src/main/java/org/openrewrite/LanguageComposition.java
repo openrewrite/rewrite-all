@@ -41,7 +41,7 @@ import org.openrewrite.yaml.tree.Yaml;
 import java.util.*;
 
 @Value
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false)
 public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accumulator> {
 
     transient LanguageCompositionPerRepository perRepositoryReport = new LanguageCompositionPerRepository(this);
