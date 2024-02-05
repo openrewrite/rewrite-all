@@ -20,7 +20,6 @@ import org.openrewrite.Column;
 import org.openrewrite.DataTable;
 import org.openrewrite.Recipe;
 
-import java.util.List;
 import java.util.Set;
 
 public class DuplicateSourceFiles extends DataTable<DuplicateSourceFiles.Row> {
