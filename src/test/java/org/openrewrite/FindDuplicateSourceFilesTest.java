@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.openrewrite.properties.Assertions.properties;
 import static org.openrewrite.test.SourceSpecs.text;
 
-public class FindDuplicateSourceFilesTest implements RewriteTest {
+class FindDuplicateSourceFilesTest implements RewriteTest {
 
     @Test
     void findDuplicates() {
