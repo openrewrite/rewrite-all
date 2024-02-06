@@ -25,6 +25,7 @@ import static org.openrewrite.test.SourceSpecs.text;
 
 class FindDuplicateSourceFilesTest implements RewriteTest {
 
+    @DocumentExample
     @Test
     void findDuplicates() {
         rewriteRun(
