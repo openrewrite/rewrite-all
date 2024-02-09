@@ -25,7 +25,7 @@ import static org.openrewrite.java.Assertions.java;
 import static org.openrewrite.kotlin.Assertions.kotlin;
 
 @SuppressWarnings({"UnusedAssignment", "DataFlowIssue", "InfiniteRecursion"})
-public class FindCallGraphTest implements RewriteTest {
+class FindCallGraphTest implements RewriteTest {
 
     @Override
     public void defaults(RecipeSpec spec) {

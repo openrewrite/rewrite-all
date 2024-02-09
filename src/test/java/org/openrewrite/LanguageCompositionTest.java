@@ -30,7 +30,7 @@ import static org.openrewrite.java.Assertions.java;
 import static org.openrewrite.test.SourceSpecs.dir;
 import static org.openrewrite.test.SourceSpecs.text;
 
-public class LanguageCompositionTest implements RewriteTest {
+class LanguageCompositionTest implements RewriteTest {
 
     @Override
     public void defaults(RecipeSpec spec) {
