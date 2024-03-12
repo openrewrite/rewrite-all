@@ -46,10 +46,10 @@ class LanguageCompositionTest implements RewriteTest {
                   boolean hasJava = false;
                   boolean hasPlainText = false;
                   for (LanguageCompositionPerRepository.Row row : table) {
-                      if (row.getLanguage().equals("Java")) {
+                      if ("Java".equals(row.getLanguage())) {
                           assertThat(row.getFileCount()).isEqualTo(1);
                           hasJava = true;
-                      } else if (row.getLanguage().equals("Plain text")) {
+                      } else if ("Plain text".equals(row.getLanguage())) {
                           assertThat(row.getFileCount()).isEqualTo(2);
                           hasPlainText = true;
                       }
@@ -62,9 +62,9 @@ class LanguageCompositionTest implements RewriteTest {
                   boolean hasJava = false;
                   boolean hasPlainText = false;
                   for (LanguageCompositionPerFile.Row row : table) {
-                      if (row.getLanguage().equals("Java")) {
+                      if ("Java".equals(row.getLanguage())) {
                           hasJava = true;
-                      } else if (row.getLanguage().equals("Plain text")) {
+                      } else if ("Plain text".equals(row.getLanguage())) {
                           hasPlainText = true;
                       }
                   }
