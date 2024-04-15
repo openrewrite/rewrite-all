@@ -189,12 +189,12 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                         .computeIfAbsent(folderPath, k -> new HashMap<>())
                         .computeIfAbsent(fileComposition.getLanguage(), k -> new Counts());
                 counts.fileCount++;
-                counts.lineCount += fileComposition.languageLineCount;
+                counts.lineCount += fileComposition.getLanguageLineCount();
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                         s.getSourcePath().toString(),
-                        fileComposition.language,
+                        fileComposition.getLanguage(),
                         s.getClass().getName(),
-                        fileComposition.fileLineCount,
+                        fileComposition.getFileLineCount(),
                         hasParseFailure));
                 return tree;
             }
