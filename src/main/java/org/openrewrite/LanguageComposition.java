@@ -187,7 +187,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                 FileComposition fileComposition = determineFileComposition(s);
                 Counts counts = acc.getFolderToLanguageToCounts()
                         .computeIfAbsent(folderPath, k -> new HashMap<>())
-                        .computeIfAbsent(fileComposition.language, k -> new Counts());
+                        .computeIfAbsent(fileComposition.getLanguage(), k -> new Counts());
                 counts.fileCount++;
                 counts.lineCount += fileComposition.languageLineCount;
                 perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
