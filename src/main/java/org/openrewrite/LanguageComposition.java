@@ -38,6 +38,10 @@ import org.openrewrite.tree.ParseError;
 import org.openrewrite.xml.tree.Xml;
 import org.openrewrite.yaml.tree.Yaml;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.UncheckedIOException;
 import java.util.*;
 
 @Value
@@ -384,8 +388,12 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
             if (text == null) {
                 return this;
             }
-            if (text.contains("\n")) {
-                count += text.split("([\r\n]+)").length;
+            try (BufferedReader reader = new BufferedReader(new StringReader(text))) {
+                while ((reader.readLine()) != null) {
+                    count++;
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
             return this;
         }
