@@ -363,6 +363,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
 
     private static class LineCounter extends PrintOutputCapture<Integer> {
         private int count;
+        private boolean startedLine;
 
         public LineCounter() {
             super(0);
@@ -378,6 +379,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
         public PrintOutputCapture<Integer> append(char c) {
             if (c == '\n') {
                 count++;
+                startedLine = false;
+            } else {
+                startedLine = true;
             }
             return this;
         }
@@ -388,21 +392,13 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                 return this;
             }
             for (int i = 0; i < text.length(); i++) {
-                if (text.charAt(i) == '\n') {
-                    count++;
-                }
-            }
-            if (!text.isEmpty()) {
-                char last = text.charAt(text.length() - 1);
-                if (last != '\n' && last != '\r') {
-                    count++;
-                }
+                append(text.charAt(i));
             }
             return this;
         }
 
         int getLineCount() {
-            return count;
+            return count + (startedLine ? 1 : 0);
         }
     }
 
