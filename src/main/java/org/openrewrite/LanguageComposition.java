@@ -368,11 +368,18 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
         return counter.getLineCount();
     }
 
-    private static class LineCounter extends PrintOutputCapture<Integer> {
+    private static
+    class LineCounter extends PrintOutputCapture<Integer> {
         private int count;
 
         public LineCounter() {
             super(0);
+        }
+
+        static int count(SourceFile s) {
+            LineCounter counter = new LineCounter();
+            s.printAll(counter);
+            return counter.getLineCount();
         }
 
         @Override
@@ -388,12 +395,10 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
             if (text == null) {
                 return this;
             }
-            try (BufferedReader reader = new BufferedReader(new StringReader(text))) {
-                while ((reader.readLine()) != null) {
+            for (int i = 0; i < text.length(); i++) {
+                if (text.charAt(i) == '\n') {
                     count++;
                 }
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
             }
             return this;
         }
@@ -402,4 +407,5 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
             return count;
         }
     }
+
 }
