@@ -109,7 +109,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                             0,
                             hasParseFailure));
                 } else {
-                    int genericLineCount = genericLineCount(s);
+                    int genericLineCount = LineCounter.count(s);
                     if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.CobolPreprocessor$Copybook")) {
                         Counts copybookCounts = acc.getFolderToLanguageToCounts()
                                 .computeIfAbsent(folderPath, k -> new HashMap<>())
@@ -359,12 +359,6 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
     private static class Counts {
         int lineCount;
         int fileCount;
-    }
-
-    private static int genericLineCount(SourceFile s) {
-        LineCounter counter = new LineCounter();
-        s.printAll(counter);
-        return counter.getLineCount();
     }
 
     private static class LineCounter extends PrintOutputCapture<Integer> {
