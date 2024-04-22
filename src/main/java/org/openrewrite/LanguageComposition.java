@@ -38,11 +38,10 @@ import org.openrewrite.tree.ParseError;
 import org.openrewrite.xml.tree.Xml;
 import org.openrewrite.yaml.tree.Yaml;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.UncheckedIOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @Value
 @EqualsAndHashCode(callSuper = false)
@@ -61,9 +60,9 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
     public String getDescription() {
         //language=markdown
         return "Counts the number of lines of the various kinds of source code and data formats parsed by OpenRewrite. " +
-                "Comments are not included in line counts. " +
-                "This recipe emits its results as two data tables, making no changes to any source file. " +
-                "One data table is per-file, the other is per-repository.";
+               "Comments are not included in line counts. " +
+               "This recipe emits its results as two data tables, making no changes to any source file. " +
+               "One data table is per-file, the other is per-repository.";
     }
 
     @Data
@@ -257,7 +256,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof PlainText) {
-                        if(s.getSourcePath().endsWith(".js") || s.getSourcePath().endsWith(".jsx") || s.getSourcePath().endsWith(".mjs")) {
+                        if (s.getSourcePath().endsWith(".js") || s.getSourcePath().endsWith(".jsx") || s.getSourcePath().endsWith(".mjs")) {
                             Counts javascriptCounts = acc.getFolderToLanguageToCounts()
                                     .computeIfAbsent(folderPath, k -> new HashMap<>())
                                     .computeIfAbsent("Javascript", k -> new Counts());
@@ -269,7 +268,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                     s.getClass().getName(),
                                     genericLineCount,
                                     hasParseFailure));
-                        } else if(s.getSourcePath().endsWith(".ts") || s.getSourcePath().endsWith(".tsx")) {
+                        } else if (s.getSourcePath().endsWith(".ts") || s.getSourcePath().endsWith(".tsx")) {
                             Counts typescriptCounts = acc.getFolderToLanguageToCounts()
                                     .computeIfAbsent(folderPath, k -> new HashMap<>())
                                     .computeIfAbsent("TypeScript", k -> new Counts());
@@ -281,7 +280,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                     s.getClass().getName(),
                                     genericLineCount,
                                     hasParseFailure));
-                        } else if(s.getSourcePath().endsWith(".py")) {
+                        } else if (s.getSourcePath().endsWith(".py")) {
                             Counts pythonCounts = acc.getFolderToLanguageToCounts()
                                     .computeIfAbsent(folderPath, k -> new HashMap<>())
                                     .computeIfAbsent("Python", k -> new Counts());
@@ -368,8 +367,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
         return counter.getLineCount();
     }
 
-    private static
-    class LineCounter extends PrintOutputCapture<Integer> {
+    private static class LineCounter extends PrintOutputCapture<Integer> {
         private int count;
 
         public LineCounter() {
