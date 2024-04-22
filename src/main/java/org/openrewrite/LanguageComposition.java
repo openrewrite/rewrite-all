@@ -392,6 +392,12 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                     count++;
                 }
             }
+            if(!text.isEmpty()) {
+                char last = text.charAt(text.length() - 1);
+                if (last != '\n' && last != '\r') {
+                    count++;
+                }
+            }
             return this;
         }
 
