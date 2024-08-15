@@ -17,7 +17,7 @@ package org.openrewrite;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import org.openrewrite.internal.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
@@ -108,7 +108,7 @@ public class FindCallGraph extends Recipe {
                 return super.visitMemberReference(memberRef, ctx);
             }
 
-            private void recordCall(@Nullable JavaType.Method method, ExecutionContext ctx) {
+            private void recordCall(JavaType.@Nullable Method method, ExecutionContext ctx) {
                 if (method == null) {
                     return;
                 }
