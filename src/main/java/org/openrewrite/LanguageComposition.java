@@ -20,6 +20,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.binary.Binary;
+import org.openrewrite.csharp.tree.Cs;
 import org.openrewrite.groovy.tree.G;
 import org.openrewrite.hcl.tree.Hcl;
 import org.openrewrite.java.tree.J;
@@ -314,6 +315,18 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                                 s.getSourcePath().toString(),
                                 "Parse error",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof Cs.CompilationUnit) {
+                        Counts csharpCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("C#", k -> new Counts());
+                        csharpCounts.fileCount++;
+                        csharpCounts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "C#",
                                 s.getClass().getName(),
                                 genericLineCount,
                                 hasParseFailure));
