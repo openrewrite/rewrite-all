@@ -172,6 +172,18 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 s.getClass().getName(),
                                 genericLineCount,
                                 hasParseFailure));
+                    } else if (s instanceof Cs.CompilationUnit) {
+                        Counts csharpCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("C#", k -> new Counts());
+                        csharpCounts.fileCount++;
+                        csharpCounts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "C#",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
                     } else if (s instanceof J) {
                         Counts javaCounts = acc.getFolderToLanguageToCounts()
                                 .computeIfAbsent(folderPath, k -> new HashMap<>())
@@ -315,18 +327,6 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                                 s.getSourcePath().toString(),
                                 "Parse error",
-                                s.getClass().getName(),
-                                genericLineCount,
-                                hasParseFailure));
-                    } else if (s instanceof Cs.CompilationUnit) {
-                        Counts csharpCounts = acc.getFolderToLanguageToCounts()
-                                .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                .computeIfAbsent("C#", k -> new Counts());
-                        csharpCounts.fileCount++;
-                        csharpCounts.lineCount += genericLineCount;
-                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                s.getSourcePath().toString(),
-                                "C#",
                                 s.getClass().getName(),
                                 genericLineCount,
                                 hasParseFailure));
