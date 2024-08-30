@@ -293,18 +293,6 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                     s.getClass().getName(),
                                     genericLineCount,
                                     hasParseFailure));
-                        } else if (s.getSourcePath().endsWith(".py")) {
-                            Counts pythonCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Python", k -> new Counts());
-                            pythonCounts.fileCount++;
-                            pythonCounts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Python",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
                         } else {
                             Counts plainTextCounts = acc.getFolderToLanguageToCounts()
                                     .computeIfAbsent(folderPath, k -> new HashMap<>())
