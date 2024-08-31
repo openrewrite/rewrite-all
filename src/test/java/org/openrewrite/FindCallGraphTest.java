@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.openrewrite.table.CallGraph;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
+import org.openrewrite.test.TypeValidation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.openrewrite.java.Assertions.java;
@@ -64,14 +65,13 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java(
-            """
+          java("""
               class Test {
                   void test() {
                       System.out.println("Hello");
                       System.out.println("Hello");
                   }
-                            
+              
                   void test2() {
                       System.out.println("Hello");
                       System.out.println("Hello");
@@ -103,8 +103,7 @@ class FindCallGraphTest implements RewriteTest {
                 )
               )),
           //language=java
-          java(
-            """
+          java("""
               import java.util.List;
               import java.util.ArrayList;
               class Test {
@@ -151,8 +150,7 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java(
-                """
+          java("""
             class Scratch {
                 static int i = bar();
                 static {
@@ -197,8 +195,7 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java(
-                """
+          java("""
             class Scratch {
                 int i = bar();
                 int j;
@@ -245,8 +242,7 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java(
-                """
+          java("""
             class A {
                 class B {
                     void b() {
@@ -267,7 +263,7 @@ class FindCallGraphTest implements RewriteTest {
     void anonymousClass() {
         rewriteRun(
           spec -> spec.dataTable(CallGraph.Row.class, row ->
-            assertThat(row).containsExactly(
+            assertThat(row).contains(
               new CallGraph.Row(
                 "B",
                 "call",
@@ -279,11 +275,35 @@ class FindCallGraphTest implements RewriteTest {
                 "",
                 CallGraph.ResourceType.METHOD,
                 "void"
+              ),
+              new CallGraph.Row(
+                "B",
+                "<init>",
+                "",
+                CallGraph.ResourceType.METHOD,
+                CallGraph.ResourceAction.CALL,
+                "B$1",
+                "<constructor>",
+                "",
+                CallGraph.ResourceType.CONSTRUCTOR,
+                "B$1"
+              ),
+              new CallGraph.Row(
+                "B$1",
+                "method",
+                "",
+                CallGraph.ResourceType.METHOD,
+                CallGraph.ResourceAction.CALL,
+                "java.io.PrintStream",
+                "println",
+                "java.lang.String",
+                CallGraph.ResourceType.METHOD,
+                "void"
               )
             )
           ),
-          java(
-                """
+          //language=java
+          java("""
             class A {
                 public void method() {}
             }
@@ -321,9 +341,7 @@ class FindCallGraphTest implements RewriteTest {
               )
             )
           ),
-          //language=kotlin
-          kotlin(
-                """
+          kotlin("""
             class A {
                 companion object {
                     @JvmStatic
@@ -331,6 +349,114 @@ class FindCallGraphTest implements RewriteTest {
                         println("Hello, world!")
                     }
                 }
+            }
+            """)
+        );
+    }
+
+    @Test
+    void missingMethodMarked() {
+        rewriteRun(
+          spec -> spec.typeValidationOptions(TypeValidation.none()),
+          //language=java
+          java("""
+            class A {
+                String s = foo();
+            }
+            """,
+            """
+            class A {
+                String s = /*~~(Method type not found)~~>*/foo();
+            }
+            """)
+        );
+    }
+
+    @Test
+    void fieldDeclarationInitialization() {
+        rewriteRun(
+          spec -> spec.dataTable(CallGraph.Row.class, row ->
+            assertThat(row).containsExactly(
+              new CallGraph.Row(
+                "A",
+                "<init>",
+                "",
+                CallGraph.ResourceType.METHOD,
+                CallGraph.ResourceAction.CALL,
+                "A",
+                "foo",
+                "",
+                CallGraph.ResourceType.METHOD,
+                "java.lang.String"
+              ),
+              new CallGraph.Row(
+                "A",
+                "<clinit>",
+                "",
+                CallGraph.ResourceType.METHOD,
+                CallGraph.ResourceAction.CALL,
+                "A",
+                "foo",
+                "",
+                CallGraph.ResourceType.METHOD,
+                "java.lang.String"
+              )
+            )
+          ),
+          //language=java
+          java("""
+            class A {
+                String instanceField = foo();
+                static String staticField = foo();
+                public static String foo() { return "foo"; }
+            }
+            """)
+        );
+    }
+
+    @Test
+    void initializerBlocks() {
+        rewriteRun(
+          spec -> spec.dataTable(CallGraph.Row.class, row ->
+            assertThat(row).containsExactly(
+              new CallGraph.Row(
+                "A",
+                "<init>",
+                "",
+                CallGraph.ResourceType.METHOD,
+                CallGraph.ResourceAction.CALL,
+                "A",
+                "foo",
+                "",
+                CallGraph.ResourceType.METHOD,
+                "java.lang.String"
+              ),
+              new CallGraph.Row(
+                "A",
+                "<clinit>",
+                "",
+                CallGraph.ResourceType.METHOD,
+                CallGraph.ResourceAction.CALL,
+                "A",
+                "foo",
+                "",
+                CallGraph.ResourceType.METHOD,
+                "java.lang.String"
+              )
+            )
+          ),
+          //language=java
+          java("""
+            class A {
+                String instanceField;
+                {
+                    instanceField = foo();
+                }
+                static String staticField;
+                static {
+                    staticField = foo();
+                }
+                public static String foo() { return "foo"; }
             }
             """)
         );

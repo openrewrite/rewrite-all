@@ -17,14 +17,16 @@ package org.openrewrite;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import org.jspecify.annotations.Nullable;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
-import org.openrewrite.java.tree.Statement;
+import org.openrewrite.marker.Markup;
 import org.openrewrite.table.CallGraph;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.util.Objects.requireNonNull;
 
 @Value
 @EqualsAndHashCode(callSuper = false)
@@ -51,97 +53,96 @@ public class FindCallGraph extends Recipe {
     @Override
     public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<ExecutionContext>() {
-            final Set<JavaType.Method> methodsCalledInScope = Collections.newSetFromMap(new IdentityHashMap<>());
-            final Set<JavaType.Method> methodsCalledInit = Collections.newSetFromMap(new IdentityHashMap<>());
-            final Set<JavaType.Method> methodsCalledClassInit = Collections.newSetFromMap(new IdentityHashMap<>());
-            boolean inInitializer;
-            boolean inStaticInitializer;
 
             @Override
-            public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
-                for (Statement statement : classDecl.getBody().getStatements()) {
-                    if (statement instanceof J.Block) {
-                        J.Block block = (J.Block) statement;
-                        if (block.isStatic()) {
-                            inStaticInitializer = true;
-                        } else {
-                            inInitializer = true;
-                        }
-                    } else if (statement instanceof J.VariableDeclarations) {
-                        J.VariableDeclarations variableDeclarations = (J.VariableDeclarations) statement;
-                        if (variableDeclarations.getModifiers().stream().anyMatch(mod -> mod.getType() == J.Modifier.Type.Static)) {
-                            inStaticInitializer = true;
-                        } else {
-                            inInitializer = true;
-                        }
-                    }
-                    visit(statement, ctx);
-                    inStaticInitializer = false;
-                    inInitializer = false;
+            public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext executionContext) {
+                if (classDecl.getType() == null) {
+                    return Markup.warn(classDecl, new IllegalStateException("Class declaration is missing type attribution"));
                 }
-
-                return classDecl;
-            }
-
-            @Override
-            public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
-                J.MethodDeclaration m = super.visitMethodDeclaration(method, ctx);
-                methodsCalledInScope.clear();
-                return m;
+                return super.visitClassDeclaration(classDecl, executionContext);
             }
 
             @Override
             public J.NewClass visitNewClass(J.NewClass newClass, ExecutionContext ctx) {
-                recordCall(newClass.getMethodType(), ctx);
-                return super.visitNewClass(newClass, ctx);
+                return super.visitNewClass(recordCall(newClass, ctx), ctx);
             }
 
             @Override
             public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
-                recordCall(method.getMethodType(), ctx);
-                return super.visitMethodInvocation(method, ctx);
+                return super.visitMethodInvocation(recordCall(method, ctx), ctx);
             }
 
             @Override
             public J.MemberReference visitMemberReference(J.MemberReference memberRef, ExecutionContext ctx) {
-                recordCall(memberRef.getMethodType(), ctx);
-                return super.visitMemberReference(memberRef, ctx);
+                return super.visitMemberReference(recordCall(memberRef, ctx), ctx);
             }
 
-            private void recordCall(JavaType.@Nullable Method method, ExecutionContext ctx) {
+            private <T extends J> T recordCall(T j, ExecutionContext ctx) {
+                JavaType.Method method = null;
+                if (j instanceof J.MethodInvocation) {
+                    method = ((J.MethodInvocation) j).getMethodType();
+                } else if (j instanceof J.NewClass) {
+                    method = ((J.NewClass) j).getMethodType();
+                } else if (j instanceof J.MemberReference) {
+                    method = ((J.MemberReference) j).getMethodType();
+                }
                 if (method == null) {
-                    return;
+                    return Markup.warn(j, new IllegalStateException("Method type not found"));
                 }
                 String fqn = method.getDeclaringType().getFullyQualifiedName();
                 if (!includeStdLib && (fqn.startsWith("java.") || fqn.startsWith("groovy.") || fqn.startsWith("kotlin."))) {
-                    return;
+                    return j;
                 }
-                J.MethodDeclaration declaration = getCursor().firstEnclosing(J.MethodDeclaration.class);
-                if (declaration == null) {
-                    J.ClassDeclaration classDecl = getCursor().firstEnclosing(J.ClassDeclaration.class);
-                    if (classDecl != null && classDecl.getType() != null && isValidMethodCall(method) &&
-                        ((inInitializer && methodsCalledInit.add(method))
-                         || (inStaticInitializer && methodsCalledClassInit.add(method)))) {
-                        callGraph.insertRow(ctx, row(classDecl.getType(), method));
+                Cursor scope = getCursor().dropParentUntil(it -> it instanceof J.MethodDeclaration || it instanceof J.ClassDeclaration || it instanceof SourceFile);
+                if (scope.getValue() instanceof J.ClassDeclaration) {
+                    boolean isInStaticInitializer = inStaticInitializer();
+                    if ((isInStaticInitializer && scope.computeMessageIfAbsent("METHODS_CALLED_IN_STATIC_INITIALIZATION", k -> new HashSet<>()).add(method)) ||
+                        (!isInStaticInitializer && scope.computeMessageIfAbsent("METHODS_CALLED_IN_INSTANCE_INITIALIZATION", k -> new HashSet<>()).add(method))) {
+                        callGraph.insertRow(ctx, row(requireNonNull(((J.ClassDeclaration) scope.getValue()).getType()).getFullyQualifiedName(), method));
                     }
-                } else if (declaration.getMethodType() != null && methodsCalledInScope.add(method) &&
-                        isValidMethodCall(declaration.getMethodType(), method)) {
-                    callGraph.insertRow(ctx, row(declaration.getMethodType(), method));
+                } else if (scope.getValue() instanceof J.MethodDeclaration) {
+                    Set<JavaType.Method> methodsCalledInScope = scope.computeMessageIfAbsent("METHODS_CALLED_IN_SCOPE", k -> new HashSet<>());
+                    if (methodsCalledInScope.add(method)) {
+                        callGraph.insertRow(ctx, row(requireNonNull(((J.MethodDeclaration) scope.getValue()).getMethodType()), method));
+                    }
+                } else if (scope.getValue() instanceof SourceFile) {
+                    // In Java there has to be a class declaration, but that isn't the case in Groovy/Kotlin/etc.
+                    // So we'll just use the source file path instead
+                    Set<JavaType.Method> methodsCalledInScope = scope.computeMessageIfAbsent("METHODS_CALLED_IN_SCOPE", k -> new HashSet<>());
+                    if (methodsCalledInScope.add(method)) {
+                        callGraph.insertRow(ctx, row(((SourceFile) scope.getValue()).getSourcePath().toString(), method));
+                    }
                 }
+                return j;
             }
 
-            private CallGraph.Row row(JavaType.FullyQualified from, JavaType.Method to) {
-                String fromName;
-                if (inInitializer) {
-                    fromName = "<init>";
-                } else if (inStaticInitializer) {
-                    fromName = "<clinit>";
-                } else {
-                    fromName = "";
-                }
+            private boolean inStaticInitializer() {
+                AtomicBoolean inStaticInitializer = new AtomicBoolean();
+                getCursor().dropParentUntil(it -> {
+                    if (it instanceof SourceFile) {
+                        return true;
+                    } else if (it instanceof J.Block) {
+                        J.Block b = (J.Block) it;
+                        if (b.isStatic()) {
+                            inStaticInitializer.set(true);
+                            return true;
+                        }
+                    } else if (it instanceof J.VariableDeclarations) {
+                        J.VariableDeclarations vd = (J.VariableDeclarations) it;
+                        if (vd.hasModifier(J.Modifier.Type.Static)) {
+                            inStaticInitializer.set(true);
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                return inStaticInitializer.get();
+            }
+
+            private CallGraph.Row row(String fqn, JavaType.Method to) {
                 return new CallGraph.Row(
-                        from.getFullyQualifiedName(),
-                        fromName,
+                        fqn,
+                        inStaticInitializer() ? "<clinit>" : "<init>",
                         "",
                         CallGraph.ResourceType.METHOD,
                         CallGraph.ResourceAction.CALL,
@@ -166,29 +167,6 @@ public class FindCallGraph extends Recipe {
                         resourceType(to),
                         returnType(to)
                 );
-            }
-
-            private boolean isValidMethodCall(JavaType.Method to) {
-                return isNotAnonymousClass(to.getDeclaringType().getFullyQualifiedName());
-            }
-
-            private boolean isValidMethodCall(JavaType.Method from, JavaType.Method to) {
-                return isNotAnonymousClass(from.getDeclaringType().getFullyQualifiedName()) &&
-                        isNotAnonymousClass(to.getDeclaringType().getFullyQualifiedName());
-            }
-
-            private boolean isNotAnonymousClass(String fqn) {
-                if (fqn.contains("$")) {
-                    for (String s : fqn.split("\\$")) {
-                        try {
-                            Integer.valueOf(s);
-                            return false;
-                        } catch (NumberFormatException ignored) {
-                        }
-                    }
-
-                }
-                return true;
             }
         };
 
