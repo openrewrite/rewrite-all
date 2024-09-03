@@ -55,11 +55,11 @@ public class FindCallGraph extends Recipe {
         return new JavaIsoVisitor<ExecutionContext>() {
 
             @Override
-            public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext executionContext) {
+            public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
                 if (classDecl.getType() == null) {
                     return Markup.warn(classDecl, new IllegalStateException("Class declaration is missing type attribution"));
                 }
-                return super.visitClassDeclaration(classDecl, executionContext);
+                return super.visitClassDeclaration(classDecl, ctx);
             }
 
             @Override
