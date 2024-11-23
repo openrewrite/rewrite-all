@@ -35,6 +35,7 @@ dependencies {
     implementation("org.openrewrite:rewrite-python:$latest")
     implementation("org.openrewrite:rewrite-kotlin:$latest")
     implementation("org.openrewrite:rewrite-csharp:$latest")
+    implementation("org.openrewrite:rewrite-javascript:$latest")
 
     testRuntimeOnly("org.openrewrite:rewrite-java-17")
 }

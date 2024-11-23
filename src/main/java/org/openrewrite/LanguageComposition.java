@@ -24,6 +24,7 @@ import org.openrewrite.csharp.tree.Cs;
 import org.openrewrite.groovy.tree.G;
 import org.openrewrite.hcl.tree.Hcl;
 import org.openrewrite.java.tree.J;
+import org.openrewrite.javascript.tree.JS;
 import org.openrewrite.json.tree.Json;
 import org.openrewrite.kotlin.tree.K;
 import org.openrewrite.properties.tree.Properties;
@@ -181,6 +182,18 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                                 s.getSourcePath().toString(),
                                 "C#",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof JS.CompilationUnit) {
+                        Counts javaScriptCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("JavaScript", k -> new Counts());
+                        javaScriptCounts.fileCount++;
+                        javaScriptCounts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "JavaScript",
                                 s.getClass().getName(),
                                 genericLineCount,
                                 hasParseFailure));
