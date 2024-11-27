@@ -37,5 +37,6 @@ dependencies {
     implementation("org.openrewrite:rewrite-csharp:$latest")
     implementation("org.openrewrite:rewrite-javascript:$latest")
 
+    testImplementation("org.openrewrite:rewrite-test")
     testRuntimeOnly("org.openrewrite:rewrite-java-17")
 }
