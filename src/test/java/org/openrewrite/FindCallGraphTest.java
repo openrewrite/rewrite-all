@@ -72,7 +72,7 @@ class FindCallGraphTest implements RewriteTest {
                       System.out.println("Hello");
                       System.out.println("Hello");
                   }
-              
+
                   void test2() {
                       System.out.println("Hello");
                       System.out.println("Hello");
@@ -347,6 +347,7 @@ class FindCallGraphTest implements RewriteTest {
               )
             )
           ),
+          //language=kotlin
           kotlin(
                 """
             class A {
