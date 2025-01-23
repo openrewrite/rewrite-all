@@ -21,6 +21,7 @@ import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.marker.Markup;
+import org.openrewrite.marker.SourceSet;
 import org.openrewrite.table.CallGraph;
 
 import java.util.*;
@@ -94,23 +95,28 @@ public class FindCallGraph extends Recipe {
                     return j;
                 }
                 Cursor scope = getCursor().dropParentUntil(it -> it instanceof J.MethodDeclaration || it instanceof J.ClassDeclaration || it instanceof SourceFile);
+                String sourceSet = Optional.ofNullable(scope.firstEnclosing(SourceFile.class))
+                        .map(Tree::getMarkers)
+                        .flatMap(m -> m.findFirst(SourceSet.class))
+                        .map(SourceSet::getName)
+                        .orElse("unknown");
                 if (scope.getValue() instanceof J.ClassDeclaration) {
                     boolean isInStaticInitializer = inStaticInitializer();
                     if ((isInStaticInitializer && scope.computeMessageIfAbsent("METHODS_CALLED_IN_STATIC_INITIALIZATION", k -> new HashSet<>()).add(method)) ||
                         (!isInStaticInitializer && scope.computeMessageIfAbsent("METHODS_CALLED_IN_INSTANCE_INITIALIZATION", k -> new HashSet<>()).add(method))) {
-                        callGraph.insertRow(ctx, row(requireNonNull(((J.ClassDeclaration) scope.getValue()).getType()).getFullyQualifiedName(), method));
+                        callGraph.insertRow(ctx, row(sourceSet, requireNonNull(((J.ClassDeclaration) scope.getValue()).getType()).getFullyQualifiedName(), method));
                     }
                 } else if (scope.getValue() instanceof J.MethodDeclaration) {
                     Set<JavaType.Method> methodsCalledInScope = scope.computeMessageIfAbsent("METHODS_CALLED_IN_SCOPE", k -> new HashSet<>());
                     if (methodsCalledInScope.add(method)) {
-                        callGraph.insertRow(ctx, row(requireNonNull(((J.MethodDeclaration) scope.getValue()).getMethodType()), method));
+                        callGraph.insertRow(ctx, row(sourceSet,requireNonNull(((J.MethodDeclaration) scope.getValue()).getMethodType()), method));
                     }
                 } else if (scope.getValue() instanceof SourceFile) {
                     // In Java there has to be a class declaration, but that isn't the case in Groovy/Kotlin/etc.
                     // So we'll just use the source file path instead
                     Set<JavaType.Method> methodsCalledInScope = scope.computeMessageIfAbsent("METHODS_CALLED_IN_SCOPE", k -> new HashSet<>());
                     if (methodsCalledInScope.add(method)) {
-                        callGraph.insertRow(ctx, row(((SourceFile) scope.getValue()).getSourcePath().toString(), method));
+                        callGraph.insertRow(ctx, row(sourceSet, ((SourceFile) scope.getValue()).getSourcePath().toString(), method));
                     }
                 }
                 return j;
@@ -139,8 +145,9 @@ public class FindCallGraph extends Recipe {
                 return inStaticInitializer.get();
             }
 
-            private CallGraph.Row row(String fqn, JavaType.Method to) {
+            private CallGraph.Row row(String sourceSet, String fqn, JavaType.Method to) {
                 return new CallGraph.Row(
+                        sourceSet,
                         fqn,
                         inStaticInitializer() ? "<clinit>" : "<init>",
                         "",
@@ -154,8 +161,9 @@ public class FindCallGraph extends Recipe {
                 );
             }
 
-            private CallGraph.Row row(JavaType.Method from, JavaType.Method to) {
+            private CallGraph.Row row(String sourceSet,JavaType.Method from, JavaType.Method to) {
                 return new CallGraph.Row(
+                        sourceSet,
                         from.getDeclaringType().getFullyQualifiedName(),
                         from.getName(),
                         parameters(from),

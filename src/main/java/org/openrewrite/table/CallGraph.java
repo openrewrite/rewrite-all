@@ -31,6 +31,11 @@ public class CallGraph extends DataTable<CallGraph.Row> {
 
     @Value
     public static class Row {
+
+        @Column(displayName = "From source set",
+                description = "The source set from which the action is issued.")
+        String fromSourceSet;
+
         @Column(displayName = "From class",
                 description = "The fully qualified name of the class from which the action is issued.")
         String fromClass;

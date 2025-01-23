@@ -22,7 +22,7 @@ import org.openrewrite.test.RewriteTest;
 import org.openrewrite.test.TypeValidation;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.openrewrite.java.Assertions.java;
+import static org.openrewrite.java.Assertions.*;
 import static org.openrewrite.kotlin.Assertions.kotlin;
 
 @SuppressWarnings({"UnusedAssignment", "DataFlowIssue", "InfiniteRecursion"})
@@ -39,6 +39,7 @@ class FindCallGraphTest implements RewriteTest {
           spec -> spec.dataTable(CallGraph.Row.class, row ->
             assertThat(row).containsExactly(
               new CallGraph.Row(
+                "main",
                 "Test",
                 "test",
                 "",
@@ -51,6 +52,7 @@ class FindCallGraphTest implements RewriteTest {
                 "void"
               ),
               new CallGraph.Row(
+                "main",
                 "Test",
                 "test2",
                 "",
@@ -64,9 +66,9 @@ class FindCallGraphTest implements RewriteTest {
               )
             )
           ),
-          //language=java
-          java(
-                """
+          mavenProject("project", srcMainJava(
+            //language=java
+            java("""
               class Test {
                   void test() {
                       System.out.println("Hello");
@@ -79,7 +81,8 @@ class FindCallGraphTest implements RewriteTest {
                   }
               }
               """
-          )
+            )
+          ))
         );
     }
 
@@ -91,6 +94,7 @@ class FindCallGraphTest implements RewriteTest {
             .dataTable(CallGraph.Row.class, row ->
               assertThat(row).containsExactly(
                 new CallGraph.Row(
+                  "unknown",
                   "Test",
                   "test",
                   "",
@@ -104,8 +108,7 @@ class FindCallGraphTest implements RewriteTest {
                 )
               )),
           //language=java
-          java(
-                """
+          java("""
               import java.util.List;
               import java.util.ArrayList;
               class Test {
@@ -126,6 +129,7 @@ class FindCallGraphTest implements RewriteTest {
           spec -> spec.dataTable(CallGraph.Row.class, row ->
             assertThat(row).containsExactly(
               new CallGraph.Row(
+                "unknown",
                 "Scratch",
                 "<clinit>",
                 "",
@@ -138,6 +142,7 @@ class FindCallGraphTest implements RewriteTest {
                 "int"
               ),
               new CallGraph.Row(
+                "unknown",
                 "Scratch",
                 "<clinit>",
                 "",
@@ -152,8 +157,7 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java(
-                """
+          java("""
             class Scratch {
                 static int i = bar();
                 static {
@@ -172,6 +176,7 @@ class FindCallGraphTest implements RewriteTest {
           spec -> spec.dataTable(CallGraph.Row.class, row ->
             assertThat(row).containsExactly(
               new CallGraph.Row(
+                "unknown",
                 "Scratch",
                 "<init>",
                 "",
@@ -184,6 +189,7 @@ class FindCallGraphTest implements RewriteTest {
                 "int"
               ),
               new CallGraph.Row(
+                "unknown",
                 "Scratch",
                 "<init>",
                 "",
@@ -198,8 +204,7 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java(
-                """
+          java("""
             class Scratch {
                 int i = bar();
                 int j;
@@ -220,6 +225,7 @@ class FindCallGraphTest implements RewriteTest {
           spec -> spec.dataTable(CallGraph.Row.class, row ->
             assertThat(row).containsExactly(
               new CallGraph.Row(
+                "unknown",
                 "A$B",
                 "b",
                 "",
@@ -232,6 +238,7 @@ class FindCallGraphTest implements RewriteTest {
                 "A$C"
               ),
               new CallGraph.Row(
+                "unknown",
                 "A$B",
                 "b",
                 "",
@@ -246,8 +253,7 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java(
-                """
+          java("""
             class A {
                 class B {
                     void b() {
@@ -270,6 +276,7 @@ class FindCallGraphTest implements RewriteTest {
           spec -> spec.dataTable(CallGraph.Row.class, row ->
             assertThat(row).contains(
               new CallGraph.Row(
+                "unknown",
                 "B",
                 "call",
                 "",
@@ -282,6 +289,7 @@ class FindCallGraphTest implements RewriteTest {
                 "void"
               ),
               new CallGraph.Row(
+                "unknown",
                 "B",
                 "<init>",
                 "",
@@ -294,6 +302,7 @@ class FindCallGraphTest implements RewriteTest {
                 "B$1"
               ),
               new CallGraph.Row(
+                "unknown",
                 "B$1",
                 "method",
                 "",
@@ -308,8 +317,7 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java(
-                """
+          java("""
             class A {
                 public void method() {}
             }
@@ -334,6 +342,7 @@ class FindCallGraphTest implements RewriteTest {
           spec -> spec.dataTable(CallGraph.Row.class, row ->
             assertThat(row).containsExactly(
               new CallGraph.Row(
+                "unknown",
                 "A$Companion",
                 "main",
                 "kotlin.Array<kotlin.String>",
@@ -348,8 +357,7 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=kotlin
-          kotlin(
-                """
+          kotlin("""
             class A {
                 companion object {
                     @JvmStatic
@@ -368,8 +376,7 @@ class FindCallGraphTest implements RewriteTest {
         rewriteRun(
           spec -> spec.typeValidationOptions(TypeValidation.none()),
           //language=java
-          java(
-                """
+          java("""
             class A {
                 String s = foo();
             }
@@ -388,6 +395,7 @@ class FindCallGraphTest implements RewriteTest {
           spec -> spec.dataTable(CallGraph.Row.class, row ->
             assertThat(row).containsExactly(
               new CallGraph.Row(
+                "unknown",
                 "A",
                 "<init>",
                 "",
@@ -400,6 +408,7 @@ class FindCallGraphTest implements RewriteTest {
                 "java.lang.String"
               ),
               new CallGraph.Row(
+                "unknown",
                 "A",
                 "<clinit>",
                 "",
@@ -414,8 +423,7 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java(
-                """
+          java("""
             class A {
                 String instanceField = foo();
                 static String staticField = foo();
@@ -431,6 +439,7 @@ class FindCallGraphTest implements RewriteTest {
           spec -> spec.dataTable(CallGraph.Row.class, row ->
             assertThat(row).containsExactly(
               new CallGraph.Row(
+                "unknown",
                 "A",
                 "<init>",
                 "",
@@ -443,6 +452,7 @@ class FindCallGraphTest implements RewriteTest {
                 "java.lang.String"
               ),
               new CallGraph.Row(
+                "unknown",
                 "A",
                 "<clinit>",
                 "",
@@ -457,8 +467,7 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java(
-                """
+          java("""
             class A {
                 String instanceField;
                 {
