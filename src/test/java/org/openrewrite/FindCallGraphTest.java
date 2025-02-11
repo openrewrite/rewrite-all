@@ -108,7 +108,8 @@ class FindCallGraphTest implements RewriteTest {
                 )
               )),
           //language=java
-          java("""
+          java(
+                """
               import java.util.List;
               import java.util.ArrayList;
               class Test {
@@ -157,7 +158,8 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java("""
+          java(
+                """
             class Scratch {
                 static int i = bar();
                 static {
@@ -204,7 +206,8 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java("""
+          java(
+                """
             class Scratch {
                 int i = bar();
                 int j;
@@ -253,7 +256,8 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java("""
+          java(
+                """
             class A {
                 class B {
                     void b() {
@@ -317,7 +321,8 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java("""
+          java(
+                """
             class A {
                 public void method() {}
             }
@@ -357,7 +362,8 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=kotlin
-          kotlin("""
+          kotlin(
+                """
             class A {
                 companion object {
                     @JvmStatic
@@ -376,7 +382,8 @@ class FindCallGraphTest implements RewriteTest {
         rewriteRun(
           spec -> spec.typeValidationOptions(TypeValidation.none()),
           //language=java
-          java("""
+          java(
+                """
             class A {
                 String s = foo();
             }
@@ -423,7 +430,8 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java("""
+          java(
+                """
             class A {
                 String instanceField = foo();
                 static String staticField = foo();
@@ -467,7 +475,8 @@ class FindCallGraphTest implements RewriteTest {
             )
           ),
           //language=java
-          java("""
+          java(
+                """
             class A {
                 String instanceField;
                 {
