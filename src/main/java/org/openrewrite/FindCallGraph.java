@@ -24,7 +24,10 @@ import org.openrewrite.marker.Markup;
 import org.openrewrite.marker.SourceSet;
 import org.openrewrite.table.CallGraph;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Objects.requireNonNull;
