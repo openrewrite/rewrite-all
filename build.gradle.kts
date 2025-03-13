@@ -27,6 +27,7 @@ dependencies {
     implementation("org.openrewrite:rewrite-java")
     implementation("org.openrewrite.recipe:rewrite-java-dependencies:$latest")
     implementation("org.openrewrite:rewrite-json")
+    implementation("org.openrewrite:rewrite-kotlin")
     implementation("org.openrewrite:rewrite-maven")
     implementation("org.openrewrite:rewrite-properties")
     implementation("org.openrewrite:rewrite-protobuf")
@@ -34,7 +35,6 @@ dependencies {
     implementation("org.openrewrite:rewrite-xml")
     implementation("org.openrewrite:rewrite-yaml")
     implementation("org.openrewrite:rewrite-python:$latest")
-    implementation("org.openrewrite:rewrite-kotlin:$latest")
     implementation("org.openrewrite:rewrite-csharp:$latest")
     implementation("org.openrewrite:rewrite-javascript:$latest")
 
