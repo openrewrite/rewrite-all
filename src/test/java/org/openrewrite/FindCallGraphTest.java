@@ -168,7 +168,8 @@ class FindCallGraphTest implements RewriteTest {
                 public static void foo() {}
                 public static int bar() { return 1; }
             }
-            """)
+            """
+          )
         );
     }
 
@@ -218,7 +219,8 @@ class FindCallGraphTest implements RewriteTest {
                 public static int foo() { return 1;}
                 public static int bar() { return 1; }
             }
-            """)
+            """
+          )
         );
     }
 
@@ -270,7 +272,8 @@ class FindCallGraphTest implements RewriteTest {
                     }
                 }
             }
-            """)
+            """
+          )
         );
     }
 
@@ -337,7 +340,8 @@ class FindCallGraphTest implements RewriteTest {
                     a.method();
                 }
             }
-            """)
+            """
+          )
         );
     }
 
@@ -372,7 +376,8 @@ class FindCallGraphTest implements RewriteTest {
                     }
                 }
             }
-            """)
+            """
+          )
         );
     }
 
@@ -392,7 +397,8 @@ class FindCallGraphTest implements RewriteTest {
             class A {
                 String s = /*~~(Method type not found)~~>*/foo();
             }
-            """)
+            """
+          )
         );
     }
 
@@ -437,7 +443,8 @@ class FindCallGraphTest implements RewriteTest {
                 static String staticField = foo();
                 public static String foo() { return "foo"; }
             }
-            """)
+            """
+          )
         );
     }
 
@@ -488,7 +495,8 @@ class FindCallGraphTest implements RewriteTest {
                 }
                 public static String foo() { return "foo"; }
             }
-            """)
+            """
+          )
         );
     }
 }
