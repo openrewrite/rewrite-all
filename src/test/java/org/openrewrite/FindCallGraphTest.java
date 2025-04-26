@@ -33,6 +33,27 @@ class FindCallGraphTest implements RewriteTest {
         spec.recipe(new FindCallGraph(true));
     }
 
+    @DocumentExample
+    @Test
+    void missingMethodMarked() {
+        rewriteRun(
+          spec -> spec.typeValidationOptions(TypeValidation.none()),
+          //language=java
+          java(
+                """
+            class A {
+                String s = foo();
+            }
+            """,
+            """
+            class A {
+                String s = /*~~(Method type not found)~~>*/foo();
+            }
+            """
+          )
+        );
+    }
+
     @Test
     void findUniqueCallsPerDeclaration() {
         rewriteRun(
@@ -375,27 +396,6 @@ class FindCallGraphTest implements RewriteTest {
                         println("Hello, world!")
                     }
                 }
-            }
-            """
-          )
-        );
-    }
-
-    @DocumentExample
-    @Test
-    void missingMethodMarked() {
-        rewriteRun(
-          spec -> spec.typeValidationOptions(TypeValidation.none()),
-          //language=java
-          java(
-                """
-            class A {
-                String s = foo();
-            }
-            """,
-            """
-            class A {
-                String s = /*~~(Method type not found)~~>*/foo();
             }
             """
           )
