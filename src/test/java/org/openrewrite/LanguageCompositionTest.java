@@ -116,7 +116,7 @@ class LanguageCompositionTest implements RewriteTest {
               spec.allSources(s -> s.markers(new ParseExceptionResult(Tree.randomId(), "all", "test", "Parsing failed.", null)));
               spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
                   assertThat(table).hasSize(1);
-                  assertThat(table.get(0).getHasParseFailures()).isTrue();
+                  assertThat(table.getFirst().getHasParseFailures()).isTrue();
               });
           },
           //language=java
