@@ -45,8 +45,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-@Value
 @EqualsAndHashCode(callSuper = false)
+@Value
 public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accumulator> {
 
     transient LanguageCompositionPerRepository perRepositoryReport = new LanguageCompositionPerRepository(this);

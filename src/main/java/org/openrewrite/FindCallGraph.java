@@ -32,8 +32,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Objects.requireNonNull;
 
-@Value
 @EqualsAndHashCode(callSuper = false)
+@Value
 public class FindCallGraph extends Recipe {
     transient CallGraph callGraph = new CallGraph(this);
 
