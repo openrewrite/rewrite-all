@@ -130,7 +130,8 @@ public class FindCallGraph extends Recipe {
                 getCursor().dropParentUntil(it -> {
                     if (it instanceof SourceFile) {
                         return true;
-                    } else if (it instanceof J.Block) {
+                    }
+                    if (it instanceof J.Block) {
                         J.Block b = (J.Block) it;
                         if (b.isStatic()) {
                             inStaticInitializer.set(true);
