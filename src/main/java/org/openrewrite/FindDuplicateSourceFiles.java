@@ -20,7 +20,15 @@ import org.openrewrite.marker.SearchResult;
 import org.openrewrite.table.DuplicateSourceFiles;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import static java.util.Collections.emptyList;
 
 public class FindDuplicateSourceFiles extends ScanningRecipe<Map<Path, List<String>>> {
     transient DuplicateSourceFiles duplicateSourceFiles = new DuplicateSourceFiles(this);
@@ -65,7 +73,7 @@ public class FindDuplicateSourceFiles extends ScanningRecipe<Map<Path, List<Stri
                 ));
             }
         }
-        return Collections.emptyList();
+        return emptyList();
     }
 
     @Override

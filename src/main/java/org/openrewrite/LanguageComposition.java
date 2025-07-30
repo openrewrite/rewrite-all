@@ -41,9 +41,10 @@ import org.openrewrite.xml.tree.Xml;
 import org.openrewrite.yaml.tree.Yaml;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import static java.util.Collections.emptyList;
 
 @EqualsAndHashCode(callSuper = false)
 @Value
@@ -367,7 +368,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
             perRepositoryReport.insertRow(ctx, new LanguageCompositionPerRepository.Row(entry.getKey(), entry.getValue().fileCount, entry.getValue().lineCount));
         }
 
-        return Collections.emptyList();
+        return emptyList();
     }
 
     private static class Counts {
