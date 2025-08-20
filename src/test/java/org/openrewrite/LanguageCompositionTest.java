@@ -47,7 +47,7 @@ class LanguageCompositionTest implements RewriteTest {
                   boolean hasPlainText = false;
                   for (LanguageCompositionPerRepository.Row row : table) {
                       if ("Java".equals(row.getLanguage())) {
-                          assertThat(row.getFileCount()).isEqualTo(1);
+                          assertThat(row.getFileCount()).isOne();
                           hasJava = true;
                       } else if ("Plain text".equals(row.getLanguage())) {
                           assertThat(row.getFileCount()).isEqualTo(2);
@@ -72,8 +72,9 @@ class LanguageCompositionTest implements RewriteTest {
                   assertThat(hasPlainText).isTrue();
               });
               spec.dataTable(LanguageCompositionPerFolder.Row.class, table -> {
-                  assertThat(table).hasSize(2);
-                  assertThat(table).contains(
+                  assertThat(table)
+                          .hasSize(2)
+                          .contains(
                     new LanguageCompositionPerFolder.Row(separatorsToSystem("src/java/main/com/whatever"), "Java", 1, 3),
                     new LanguageCompositionPerFolder.Row("", "Plain text", 2, 4)
                   );
@@ -138,16 +139,18 @@ class LanguageCompositionTest implements RewriteTest {
         rewriteRun(
           spec -> {
               spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
-                  assertThat(table).hasSize(3);
-                  assertThat(table).containsOnlyOnce(
+                  assertThat(table)
+                          .hasSize(3)
+                          .containsOnlyOnce(
                     new LanguageCompositionPerFile.Row(separatorsToSystem("src/main/file.txt"), "Plain text", PlainText.class.getName(), 2, false),
                     new LanguageCompositionPerFile.Row(separatorsToSystem("src/resources/file.txt"), "Plain text", PlainText.class.getName(), 3, false),
                     new LanguageCompositionPerFile.Row(separatorsToSystem("file.txt"), "Plain text", PlainText.class.getName(), 4, false)
                   );
               });
               spec.dataTable(LanguageCompositionPerFolder.Row.class, table -> {
-                  assertThat(table).hasSize(3);
-                  assertThat(table).containsOnlyOnce(
+                  assertThat(table)
+                          .hasSize(3)
+                          .containsOnlyOnce(
                     new LanguageCompositionPerFolder.Row(separatorsToSystem("src/main"), "Plain text", 1, 2),
                     new LanguageCompositionPerFolder.Row(separatorsToSystem("src/resources"), "Plain text", 1, 3),
                     new LanguageCompositionPerFolder.Row(separatorsToSystem(""), "Plain text", 1, 4)
