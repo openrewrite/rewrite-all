@@ -1,0 +1,54 @@
+package org.openrewrite.assertions;
+
+import org.intellij.lang.annotations.Language;
+import org.jspecify.annotations.Nullable;
+import org.openrewrite.Parser;
+import org.openrewrite.SourceFile;
+import org.openrewrite.Tree;
+import org.openrewrite.json.JsonParser;
+import org.openrewrite.json.tree.Json;
+import org.openrewrite.test.SourceSpec;
+import org.openrewrite.test.SourceSpecs;
+import org.openrewrite.yaml.YamlParser;
+import org.openrewrite.yaml.tree.Yaml;
+
+import java.nio.file.Path;
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class ConvertingSourceSpec<FROM extends Tree, TO extends Tree> extends SourceSpec<SourceFile> {
+        public ConvertingSourceSpec(String before, @Nullable UnaryOperator<String> after, Parser.Builder parser, Class<FROM> fromClass, Class<TO> toClass) {
+            super(SourceFile.class, null, parser, before, after);
+            assertThat(fromClass).withFailMessage("The <%s> parser does not support <%s>. Did you pass the correct Tree or SourceFile type as 'from' or use the wrong parser Builder?", parser.getDslName(), fromClass.getSimpleName()).isAssignableFrom(parser.getSourceFileType());
+            beforeRecipe(from -> assertThat(from).isInstanceOf(fromClass));
+            afterRecipe(to -> assertThat(to).isInstanceOf(toClass));
+        }
+
+        public static SourceSpecs jsonToYaml(@Language("json") String before, @Language("yaml") String after) {
+            return jsonToYaml(before, after, spec ->
+              spec
+                .path("testing.json")
+                .afterRecipe(yaml -> assertThat(yaml.getSourcePath()).isEqualTo(Path.of("testing.yaml"))));
+        }
+
+        public static SourceSpecs jsonToYaml(@Language("json") String before, @Language("yaml") String after, Consumer<SourceSpec<SourceFile>> spec) {
+            ConvertingSourceSpec<Json, Yaml> source = new ConvertingSourceSpec<>(before, s -> after, new JsonParser.Builder(), Json.class, Yaml.class);
+            spec.accept(source);
+            return source;
+        }
+
+        public static SourceSpecs yamlToJson(@Language("yaml") String before, @Language("json") String after) {
+            return yamlToJson(before, after, spec ->
+              spec
+                .path("testing.yaml")
+                .afterRecipe(json -> assertThat(json.getSourcePath()).isEqualTo(Path.of("testing.json"))));
+        }
+
+        public static SourceSpecs yamlToJson(@Language("yaml") String before, @Language("json") String after, Consumer<SourceSpec<SourceFile>> spec) {
+            ConvertingSourceSpec<Yaml, Json> source = new ConvertingSourceSpec<>(before, s -> after, new YamlParser.Builder(), Yaml.class, Json.class);
+            spec.accept(source);
+            return source;
+        }
+    }
