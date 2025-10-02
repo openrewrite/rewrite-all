@@ -172,15 +172,5 @@ public class YamlToJsonConverterVisitor extends TreeVisitor<Tree, ExecutionConte
             p.append("\"");
             return scalar;
         }
-
-        @Override
-        public Yaml.Anchor visitAnchor(Yaml.Anchor anchor, PrintOutputCapture<P> p) {
-            return anchor;
-        }
-
-        @Override
-        public Yaml.Alias visitAlias(Yaml.Alias alias, PrintOutputCapture<P> p) {
-            return alias;
-        }
     }
 }
