@@ -29,10 +29,6 @@ import java.nio.file.Paths;
 import java.util.Objects;
 
 public class JsonToYamlVisitor extends TreeVisitor<Tree, ExecutionContext> {
-
-    private final YamlParser yamlParser = new YamlParser();
-    private final JsonAsYamlPrinter<ExecutionContext> printer = new JsonAsYamlPrinter<>();
-
     @Override
     public boolean isAcceptable(SourceFile sourceFile, ExecutionContext ctx) {
         return sourceFile instanceof Json.Document;
@@ -42,14 +38,17 @@ public class JsonToYamlVisitor extends TreeVisitor<Tree, ExecutionContext> {
     public @Nullable Tree visit(@Nullable Tree tree, ExecutionContext ctx) {
         if (tree instanceof Json.Document) {
             Json.Document doc = (Json.Document) tree;
-            String yaml = printer.reduce(doc, new PrintOutputCapture<>(ctx)).getOut();
-            SourceFile sourceFile = yamlParser.parse(yaml).findFirst().orElse(null);
+            String yaml = new JsonAsYamlPrinter<ExecutionContext>().reduce(doc, new PrintOutputCapture<>(ctx)).getOut();
+            SourceFile sourceFile = new YamlParser().parse(yaml).findFirst().orElse(null);
             if (sourceFile instanceof Yaml) {
                 Path path = doc.getSourcePath();
                 if (PathUtils.matchesGlob(path, "**.json")) {
                     path = Paths.get(path.toString().replaceAll("\\.json$", ".yaml"));
                 }
-                return sourceFile.withSourcePath(path).withMarkers(doc.getMarkers()).withId(doc.getId());
+                return sourceFile
+                        .withSourcePath(path)
+                        .withMarkers(doc.getMarkers())
+                        .withId(doc.getId());
             }
             if (sourceFile instanceof ParseError) {
                 StringBuilder message = new StringBuilder("Something went wrong parsing the yaml value:\n");
