@@ -36,46 +36,46 @@ class JsonToYamlVisitorTest implements RewriteTest {
         rewriteRun(
           jsonToYaml(
             """
-            {
-              "unit": "testing",
-              "nested": {
-                "values": "string",
-                "number": 1,
-                "objects": {
-                  "deep": true
-                }
-              },
-              "arrays": [
-                {
-                  "key": "value",
-                  "object": {
-                    "also": "works"
-                  },
-                  "array": ["nesting", "can", "be", "done", "!"]
+              {
+                "unit": "testing",
+                "nested": {
+                  "values": "string",
+                  "number": 1,
+                  "objects": {
+                    "deep": true
+                  }
                 },
-                "Text"
-              ]
-            }
-            """,
+                "arrays": [
+                  {
+                    "key": "value",
+                    "object": {
+                      "also": "works"
+                    },
+                    "array": ["nesting", "can", "be", "done", "!"]
+                  },
+                  "Text"
+                ]
+              }
+              """,
             """
-            unit: "testing"
-            nested:
-              values: "string"
-              number: 1
-              objects:
-                deep: true
-            arrays:
-              - key: "value"
-                object:
-                  also: "works"
-                array:
-                  - "nesting"
-                  - "can"
-                  - "be"
-                  - "done"
-                  - "!"
-              - "Text"
-            """
+              unit: "testing"
+              nested:
+                values: "string"
+                number: 1
+                objects:
+                  deep: true
+              arrays:
+                - key: "value"
+                  object:
+                    also: "works"
+                  array:
+                    - "nesting"
+                    - "can"
+                    - "be"
+                    - "done"
+                    - "!"
+                - "Text"
+              """
           )
         );
     }
@@ -85,17 +85,17 @@ class JsonToYamlVisitorTest implements RewriteTest {
         rewriteRun(
           jsonToYaml(
             """
-            {
-              "values": "string",
-              "number": 1,
-              "objects": null
-            }
-            """,
+              {
+                "values": "string",
+                "number": 1,
+                "objects": null
+              }
+              """,
             """
-            values: "string"
-            number: 1
-            objects: null
-            """
+              values: "string"
+              number: 1
+              objects: null
+              """
           )
         );
     }
@@ -105,23 +105,23 @@ class JsonToYamlVisitorTest implements RewriteTest {
         rewriteRun(
           jsonToYaml(
             """
-            {
-              "nested": {
-                "values": "string",
-                "number": 1,
-                "objects": {
-                  "deep": true
+              {
+                "nested": {
+                  "values": "string",
+                  "number": 1,
+                  "objects": {
+                    "deep": true
+                  }
                 }
               }
-            }
-            """,
+              """,
             """
-            nested:
-              values: "string"
-              number: 1
-              objects:
-                deep: true
-            """
+              nested:
+                values: "string"
+                number: 1
+                objects:
+                  deep: true
+              """
           )
         );
     }
@@ -131,18 +131,18 @@ class JsonToYamlVisitorTest implements RewriteTest {
         rewriteRun(
           jsonToYaml(
             """
-            {
-              "array": ["arrays", "can", "be", "done", "!"]
-            }
-            """,
+              {
+                "array": ["arrays", "can", "be", "done", "!"]
+              }
+              """,
             """
-            array:
-              - "arrays"
-              - "can"
-              - "be"
-              - "done"
-              - "!"
-            """
+              array:
+                - "arrays"
+                - "can"
+                - "be"
+                - "done"
+                - "!"
+              """
           )
         );
     }
@@ -152,21 +152,21 @@ class JsonToYamlVisitorTest implements RewriteTest {
         rewriteRun(
           jsonToYaml(
             """
-            {
-              "nested": {
-                "array": ["nesting", "can", "be", "done", "!"]
+              {
+                "nested": {
+                  "array": ["nesting", "can", "be", "done", "!"]
+                }
               }
-            }
-            """,
+              """,
             """
-            nested:
-              array:
-                - "nesting"
-                - "can"
-                - "be"
-                - "done"
-                - "!"
-            """
+              nested:
+                array:
+                  - "nesting"
+                  - "can"
+                  - "be"
+                  - "done"
+                  - "!"
+              """
           )
         );
     }
@@ -176,27 +176,27 @@ class JsonToYamlVisitorTest implements RewriteTest {
         rewriteRun(
           jsonToYaml(
             """
-            {
-              "nested": [
-                {
-                  "array": ["nesting", "can", "be", "done", "!"],
-                  "key": "value"
-                },
-                "other-item"
-              ]
-            }
-            """,
+              {
+                "nested": [
+                  {
+                    "array": ["nesting", "can", "be", "done", "!"],
+                    "key": "value"
+                  },
+                  "other-item"
+                ]
+              }
+              """,
             """
-            nested:
-              - array:
-                  - "nesting"
-                  - "can"
-                  - "be"
-                  - "done"
-                  - "!"
-                key: "value"
-              - "other-item"
-            """
+              nested:
+                - array:
+                    - "nesting"
+                    - "can"
+                    - "be"
+                    - "done"
+                    - "!"
+                  key: "value"
+                - "other-item"
+              """
           )
         );
     }
