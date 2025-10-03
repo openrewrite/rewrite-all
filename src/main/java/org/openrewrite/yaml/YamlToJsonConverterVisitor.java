@@ -51,7 +51,8 @@ public class YamlToJsonConverterVisitor extends TreeVisitor<Tree, ExecutionConte
                     path = Paths.get(path.toString().replaceAll("\\.ya?ml$", ".json"));
                 }
                 return sourceFile.withSourcePath(path).withMarkers(doc.getMarkers()).withId(doc.getId());
-            } else if (sourceFile instanceof ParseError) {
+            }
+            if (sourceFile instanceof ParseError) {
                 ParseError error = (ParseError) sourceFile;
                 Optional<ParseExceptionResult> exceptionResult = error.getMarkers().findFirst(ParseExceptionResult.class);
                 StringBuilder message = new StringBuilder();
@@ -140,13 +141,13 @@ public class YamlToJsonConverterVisitor extends TreeVisitor<Tree, ExecutionConte
             String value = scalar.getValue();
 
             // Handle null values
-            if (value.equals("null") || value.isEmpty()) {
+            if ("null".equals(value) || value.isEmpty()) {
                 p.append("null");
                 return scalar;
             }
 
             // Handle booleans
-            if (value.equals("true") || value.equals("false")) {
+            if ("true".equals(value) || "false".equals(value)) {
                 p.append(value);
                 return scalar;
             }
@@ -157,11 +158,10 @@ public class YamlToJsonConverterVisitor extends TreeVisitor<Tree, ExecutionConte
                     Double.parseDouble(value);
                     p.append(value);
                     return scalar;
-                } else {
-                    Long.parseLong(value);
-                    p.append(value);
-                    return scalar;
                 }
+                Long.parseLong(value);
+                p.append(value);
+                return scalar;
             } catch (NumberFormatException e) {
                 // Not a number, treat as string
             }

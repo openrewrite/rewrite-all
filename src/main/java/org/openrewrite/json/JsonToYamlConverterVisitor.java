@@ -52,7 +52,8 @@ public class JsonToYamlConverterVisitor extends TreeVisitor<Tree, ExecutionConte
                     path = Paths.get(path.toString().replaceAll("\\.json$", ".yaml"));
                 }
                 return sourceFile.withSourcePath(path).withMarkers(doc.getMarkers()).withId(doc.getId());
-            } else if (sourceFile instanceof ParseError) {
+            }
+            if (sourceFile instanceof ParseError) {
                 ParseError error = (ParseError) sourceFile;
                 Optional<ParseExceptionResult> exceptionResult = error.getMarkers().findFirst(ParseExceptionResult.class);
                 StringBuilder message = new StringBuilder();
@@ -100,6 +101,7 @@ public class JsonToYamlConverterVisitor extends TreeVisitor<Tree, ExecutionConte
             return array;
         }
 
+        @Override
         public Json.Member visitMember(Json.Member member, PrintOutputCapture<P> p) {
             p.append(calculatePrefix());
             visit(member.getKey(), p);

@@ -29,8 +29,8 @@ class JsonToYamlConverterVisitorTest implements RewriteTest {
         spec.recipe(RewriteTest.toRecipe(JsonToYamlConverterVisitor::new));
     }
 
-    @Test
     @DocumentExample
+    @Test
     void convertsJsonYoYaml() {
         rewriteRun(
           jsonToYaml(
