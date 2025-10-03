@@ -27,9 +27,8 @@ import org.openrewrite.yaml.tree.Yaml;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
-import java.util.Optional;
 
-public class JsonToYamlConverterVisitor extends TreeVisitor<Tree, ExecutionContext> {
+public class JsonToYamlVisitor extends TreeVisitor<Tree, ExecutionContext> {
 
     private final YamlParser yamlParser = new YamlParser();
     private final JsonAsYamlPrinter<ExecutionContext> printer = new JsonAsYamlPrinter<>();
@@ -43,9 +42,8 @@ public class JsonToYamlConverterVisitor extends TreeVisitor<Tree, ExecutionConte
     public @Nullable Tree visit(@Nullable Tree tree, ExecutionContext ctx) {
         if (tree instanceof Json.Document) {
             Json.Document doc = (Json.Document) tree;
-            PrintOutputCapture<ExecutionContext> p = new PrintOutputCapture<>(ctx);
-            printer.visit(doc, p);
-            SourceFile sourceFile = yamlParser.parse(p.getOut()).findFirst().orElse(null);
+            String yaml = printer.reduce(doc, new PrintOutputCapture<>(ctx)).getOut();
+            SourceFile sourceFile = yamlParser.parse(yaml).findFirst().orElse(null);
             if (sourceFile instanceof Yaml) {
                 Path path = doc.getSourcePath();
                 if (PathUtils.matchesGlob(path, "**.json")) {
@@ -54,18 +52,11 @@ public class JsonToYamlConverterVisitor extends TreeVisitor<Tree, ExecutionConte
                 return sourceFile.withSourcePath(path).withMarkers(doc.getMarkers()).withId(doc.getId());
             }
             if (sourceFile instanceof ParseError) {
-                ParseError error = (ParseError) sourceFile;
-                Optional<ParseExceptionResult> exceptionResult = error.getMarkers().findFirst(ParseExceptionResult.class);
-                StringBuilder message = new StringBuilder();
-                message.append("Something went wrong parsing the yaml value:\n");
-                if (exceptionResult.isPresent()) {
-                    message.append(exceptionResult.get().getMessage());
-                    message.append("\n");
-                }
-                message
-                        .append("\n\nThe input passed to the parser:\n")
-                        .append(p.getOut());
-                tree = Markup.warn(doc, new RuntimeException(message.toString()));
+                StringBuilder message = new StringBuilder("Something went wrong parsing the yaml value:\n");
+                sourceFile.getMarkers().findFirst(ParseExceptionResult.class)
+                        .ifPresent(parseExceptionResult -> message.append(parseExceptionResult.getMessage()).append("\n"));
+                message.append("\n\nThe input passed to the parser:\n").append(yaml);
+                return Markup.warn(doc, new RuntimeException(message.toString()));
             }
         }
         return tree;
@@ -91,11 +82,7 @@ public class JsonToYamlConverterVisitor extends TreeVisitor<Tree, ExecutionConte
         public Json.Array visitArray(Json.Array array, PrintOutputCapture<P> p) {
             String prefix = calculatePrefix();
             array.getValues().forEach(value -> {
-                p.append(prefix)
-                        .append(' ')
-                        .append(' ')
-                        .append('-')
-                        .append(' ');
+                p.append(prefix).append("  - ");
                 visit(value, p);
             });
             return array;
@@ -122,7 +109,8 @@ public class JsonToYamlConverterVisitor extends TreeVisitor<Tree, ExecutionConte
         @Override
         public Json.Literal visitLiteral(Json.Literal literal, PrintOutputCapture<P> p) {
             // No quotes around yaml keys
-            if (getCursor().getParentTreeCursor().getValue() instanceof Json.Member && ((Json.Member) getCursor().getParentTreeCursor().getValue()).getKey() == literal) {
+            Json value = getCursor().getParentTreeCursor().getValue();
+            if (value instanceof Json.Member && ((Json.Member) value).getKey() == literal) {
                 p.append(Objects.toString(literal.getValue()));
                 return literal;
             }

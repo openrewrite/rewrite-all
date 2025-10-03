@@ -21,12 +21,13 @@ import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.assertions.ConvertingSourceSpec.jsonToYaml;
+import static org.openrewrite.test.RewriteTest.toRecipe;
 
-class JsonToYamlConverterVisitorTest implements RewriteTest {
+class JsonToYamlVisitorTest implements RewriteTest {
 
     @Override
     public void defaults(RecipeSpec spec) {
-        spec.recipe(RewriteTest.toRecipe(JsonToYamlConverterVisitor::new));
+        spec.recipe(toRecipe(JsonToYamlVisitor::new));
     }
 
     @DocumentExample

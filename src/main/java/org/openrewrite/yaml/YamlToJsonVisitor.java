@@ -26,9 +26,8 @@ import org.openrewrite.yaml.tree.Yaml;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
-public class YamlToJsonConverterVisitor extends TreeVisitor<Tree, ExecutionContext> {
+public class YamlToJsonVisitor extends TreeVisitor<Tree, ExecutionContext> {
 
     private final JsonParser jsonParser = new JsonParser();
     private final YamlAsJsonPrinter<ExecutionContext> printer = new YamlAsJsonPrinter<>();
@@ -42,9 +41,8 @@ public class YamlToJsonConverterVisitor extends TreeVisitor<Tree, ExecutionConte
     public @Nullable Tree visit(@Nullable Tree tree, ExecutionContext ctx) {
         if (tree instanceof Yaml.Documents) {
             Yaml.Documents doc = (Yaml.Documents) tree;
-            PrintOutputCapture<ExecutionContext> p = new PrintOutputCapture<>(ctx);
-            printer.visit(doc, p);
-            SourceFile sourceFile = jsonParser.parse(p.getOut()).findFirst().orElse(null);
+            String json = printer.reduce(doc, new PrintOutputCapture<>(ctx)).getOut();
+            SourceFile sourceFile = jsonParser.parse(json).findFirst().orElse(null);
             if (sourceFile instanceof Json.Document) {
                 Path path = doc.getSourcePath();
                 if (PathUtils.matchesGlob(path, "**.yaml") || PathUtils.matchesGlob(path, "**.yml")) {
@@ -53,18 +51,11 @@ public class YamlToJsonConverterVisitor extends TreeVisitor<Tree, ExecutionConte
                 return sourceFile.withSourcePath(path).withMarkers(doc.getMarkers()).withId(doc.getId());
             }
             if (sourceFile instanceof ParseError) {
-                ParseError error = (ParseError) sourceFile;
-                Optional<ParseExceptionResult> exceptionResult = error.getMarkers().findFirst(ParseExceptionResult.class);
-                StringBuilder message = new StringBuilder();
-                message.append("Something went wrong parsing the json value:\n");
-                if (exceptionResult.isPresent()) {
-                    message.append(exceptionResult.get().getMessage());
-                    message.append("\n");
-                }
-                message
-                        .append("\n\nThe input passed to the parser:\n")
-                        .append(p.getOut());
-                tree = Markup.warn(doc, new RuntimeException(message.toString()));
+                StringBuilder message = new StringBuilder("Something went wrong parsing the json value:\n");
+                sourceFile.getMarkers().findFirst(ParseExceptionResult.class)
+                        .ifPresent(result -> message.append(result.getMessage()).append("\n"));
+                message.append("\n\nThe input passed to the parser:\n").append(json);
+                return Markup.warn(doc, new RuntimeException(message.toString()));
             }
         }
         return tree;
@@ -74,7 +65,7 @@ public class YamlToJsonConverterVisitor extends TreeVisitor<Tree, ExecutionConte
 
         private int getIndentLevel() {
             return (int) getCursor().getPathAsStream(tree ->
-                tree instanceof Yaml.Mapping || tree instanceof Yaml.Sequence
+                    tree instanceof Yaml.Mapping || tree instanceof Yaml.Sequence
             ).count();
         }
 
