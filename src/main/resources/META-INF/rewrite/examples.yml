@@ -15,7 +15,7 @@
 type: specs.openrewrite.org/v1beta/example
 recipeName: org.openrewrite.FindCallGraph
 examples:
-- description: ''
+- description: '`FindCallGraphTest#missingMethodMarked`'
   parameters:
   - 'true'
   sources:
@@ -32,8 +32,9 @@ examples:
 type: specs.openrewrite.org/v1beta/example
 recipeName: org.openrewrite.FindDuplicateSourceFiles
 examples:
-- description: ''
+- description: '`FindDuplicateSourceFilesTest#findDuplicates`'
   sources:
   - before: hello=world
     after: ~~>hello=world
+    path: hello.properties
     language: properties
