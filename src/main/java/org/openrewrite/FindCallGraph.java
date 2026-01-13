@@ -37,15 +37,9 @@ import static java.util.Objects.requireNonNull;
 public class FindCallGraph extends Recipe {
     transient CallGraph callGraph = new CallGraph(this);
 
-    @Override
-    public String getDisplayName() {
-        return "Find call graph";
-    }
+    String displayName = "Find call graph";
 
-    @Override
-    public String getDescription() {
-        return "Produces a data table where each row represents a method call.";
-    }
+    String description = "Produces a data table where each row represents a method call.";
 
     @Option(displayName = "Include standard library",
             description = "When enabled calls to methods in packages beginning with \"java\", \"groovy\", and \"kotlin\" " +
