@@ -15,6 +15,7 @@
  */
 package org.openrewrite;
 
+import lombok.Getter;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.marker.SearchResult;
 import org.openrewrite.table.DuplicateSourceFiles;
@@ -33,15 +34,11 @@ import static java.util.Collections.emptyList;
 public class FindDuplicateSourceFiles extends ScanningRecipe<Map<Path, List<String>>> {
     transient DuplicateSourceFiles duplicateSourceFiles = new DuplicateSourceFiles(this);
 
-    @Override
-    public String getDisplayName() {
-        return "Find duplicate source files";
-    }
+    @Getter
+    final String displayName = "Find duplicate source files";
 
-    @Override
-    public String getDescription() {
-        return "Record the presence of LSTs with duplicate paths, indicating that the same file was parsed more than once.";
-    }
+    @Getter
+    final String description = "Record the presence of LSTs with duplicate paths, indicating that the same file was parsed more than once.";
 
     @Override
     public Map<Path, List<String>> getInitialValue(ExecutionContext ctx) {
