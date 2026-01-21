@@ -31,10 +31,11 @@ dependencies {
     implementation("org.openrewrite:rewrite-maven")
     implementation("org.openrewrite:rewrite-properties")
     implementation("org.openrewrite:rewrite-protobuf")
+    implementation("org.openrewrite:rewrite-python")
     implementation("org.openrewrite:rewrite-toml")
     implementation("org.openrewrite:rewrite-xml")
     implementation("org.openrewrite:rewrite-yaml")
-    implementation("org.openrewrite:rewrite-python:$latest")
+    implementation("org.openrewrite:rewrite-cobol:$latest")
     implementation("org.openrewrite:rewrite-csharp:$latest")
 
     testImplementation("org.openrewrite:rewrite-test")
