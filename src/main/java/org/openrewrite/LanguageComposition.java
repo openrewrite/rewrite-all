@@ -20,10 +20,13 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.binary.Binary;
+import org.openrewrite.cobol.tree.CobolPreprocessor;
+import org.openrewrite.controlm.tree.ControlM;
 import org.openrewrite.csharp.tree.Cs;
 import org.openrewrite.groovy.tree.G;
 import org.openrewrite.hcl.tree.Hcl;
 import org.openrewrite.java.tree.J;
+import org.openrewrite.jcl.tree.Jcl;
 import org.openrewrite.json.tree.Json;
 import org.openrewrite.kotlin.tree.K;
 import org.openrewrite.properties.tree.Properties;
@@ -106,7 +109,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                             hasParseFailure));
                 } else {
                     int genericLineCount = LineCounter.count(s);
-                    if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.CobolPreprocessor$Copybook")) {
+                    if (s instanceof CobolPreprocessor.Copybook) {
                         Counts copybookCounts = acc.getFolderToLanguageToCounts()
                                 .computeIfAbsent(folderPath, k -> new HashMap<>())
                                 .computeIfAbsent("Copybook", k -> new Counts());
@@ -118,7 +121,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 s.getClass().getName(),
                                 genericLineCount,
                                 hasParseFailure));
-                    } else if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.Cobol")) {
+                    } else if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.Cobol")) { // Also CobolPreprocessor
                         Counts cobolCounts = acc.getFolderToLanguageToCounts()
                                 .computeIfAbsent(folderPath, k -> new HashMap<>())
                                 .computeIfAbsent("Cobol", k -> new Counts());
@@ -127,6 +130,30 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                                 s.getSourcePath().toString(),
                                 "Cobol",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof ControlM) {
+                        Counts counts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Control-M", k -> new Counts());
+                        counts.fileCount++;
+                        counts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Control-M",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof Jcl) {
+                        Counts counts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("JCL", k -> new Counts());
+                        counts.fileCount++;
+                        counts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "JCL",
                                 s.getClass().getName(),
                                 genericLineCount,
                                 hasParseFailure));
