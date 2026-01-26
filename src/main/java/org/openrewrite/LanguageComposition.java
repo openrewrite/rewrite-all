@@ -23,6 +23,7 @@ import org.openrewrite.binary.Binary;
 import org.openrewrite.cobol.tree.CobolPreprocessor;
 import org.openrewrite.controlm.tree.ControlM;
 import org.openrewrite.csharp.tree.Cs;
+import org.openrewrite.docker.tree.Docker;
 import org.openrewrite.groovy.tree.G;
 import org.openrewrite.hcl.tree.Hcl;
 import org.openrewrite.java.tree.J;
@@ -142,6 +143,18 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                         perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
                                 s.getSourcePath().toString(),
                                 "Control-M",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
+                    } else if (s instanceof Docker) {
+                        Counts counts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Docker", k -> new Counts());
+                        counts.fileCount++;
+                        counts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Docker",
                                 s.getClass().getName(),
                                 genericLineCount,
                                 hasParseFailure));
