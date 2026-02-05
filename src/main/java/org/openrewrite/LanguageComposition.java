@@ -229,7 +229,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                             javascriptCounts.fileCount++;
                             javascriptCounts.lineCount += genericLineCount;
                             perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
+                                    sourcePath,
                                     "JavaScript",
                                     s.getClass().getName(),
                                     genericLineCount,
@@ -241,7 +241,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                             typescriptCounts.fileCount++;
                             typescriptCounts.lineCount += genericLineCount;
                             perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
+                                    sourcePath,
                                     "Typescript",
                                     s.getClass().getName(),
                                     genericLineCount,
