@@ -224,7 +224,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                         if (s.getSourcePath().endsWith(".js") || s.getSourcePath().endsWith(".jsx") || s.getSourcePath().endsWith(".mjs")) {
                             Counts javascriptCounts = acc.getFolderToLanguageToCounts()
                                     .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Javascript", k -> new Counts());
+                                    .computeIfAbsent("JavaScript", k -> new Counts());
                             javascriptCounts.fileCount++;
                             javascriptCounts.lineCount += genericLineCount;
                             perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
@@ -236,7 +236,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                         } else if (s.getSourcePath().endsWith(".ts") || s.getSourcePath().endsWith(".tsx")) {
                             Counts typescriptCounts = acc.getFolderToLanguageToCounts()
                                     .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("TypeScript", k -> new Counts());
+                                    .computeIfAbsent("Typescript", k -> new Counts());
                             typescriptCounts.fileCount++;
                             typescriptCounts.lineCount += genericLineCount;
                             perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
