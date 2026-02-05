@@ -153,7 +153,7 @@ class LanguageCompositionTest implements RewriteTest {
                     .hasSize(2)
                     .contains(
                       new LanguageCompositionPerFolder.Row(separatorsToSystem("src/javascript"), "JavaScript", 3, 15),
-                      new LanguageCompositionPerFolder.Row("src/typescript", "Typescript", 2, 14)
+                      new LanguageCompositionPerFolder.Row(separatorsToSystem("src/typescript"), "Typescript", 2, 14)
                     );
               });
           },
