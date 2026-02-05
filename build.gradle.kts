@@ -38,6 +38,7 @@ dependencies {
     implementation("org.openrewrite:rewrite-yaml")
     implementation("org.openrewrite:rewrite-cobol:$latest")
     implementation("org.openrewrite:rewrite-csharp:$latest")
+    implementation("org.openrewrite:rewrite-javascript")
 
     testImplementation("org.openrewrite:rewrite-test")
     testRuntimeOnly("org.openrewrite:rewrite-java-21")
