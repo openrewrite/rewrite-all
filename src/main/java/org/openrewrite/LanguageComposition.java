@@ -27,6 +27,7 @@ import org.openrewrite.docker.tree.Docker;
 import org.openrewrite.groovy.tree.G;
 import org.openrewrite.hcl.tree.Hcl;
 import org.openrewrite.java.tree.J;
+import org.openrewrite.javascript.tree.JS;
 import org.openrewrite.jcl.tree.Jcl;
 import org.openrewrite.json.tree.Json;
 import org.openrewrite.kotlin.tree.K;
@@ -219,6 +220,33 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 s.getClass().getName(),
                                 genericLineCount,
                                 hasParseFailure));
+                    } else if (s instanceof JS) {
+                        String sourcePath = s.getSourcePath().toString();
+                        if (sourcePath.endsWith(".js") || sourcePath.endsWith(".jsx") || sourcePath.endsWith(".mjs")) {
+                            Counts javascriptCounts = acc.getFolderToLanguageToCounts()
+                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                    .computeIfAbsent("JavaScript", k -> new Counts());
+                            javascriptCounts.fileCount++;
+                            javascriptCounts.lineCount += genericLineCount;
+                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                    sourcePath,
+                                    "JavaScript",
+                                    s.getClass().getName(),
+                                    genericLineCount,
+                                    hasParseFailure));
+                        } else if (sourcePath.endsWith(".ts") || sourcePath.endsWith(".tsx")) {
+                            Counts typescriptCounts = acc.getFolderToLanguageToCounts()
+                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                    .computeIfAbsent("Typescript", k -> new Counts());
+                            typescriptCounts.fileCount++;
+                            typescriptCounts.lineCount += genericLineCount;
+                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                    sourcePath,
+                                    "Typescript",
+                                    s.getClass().getName(),
+                                    genericLineCount,
+                                    hasParseFailure));
+                        }
                     } else if (s instanceof J) {
                         Counts javaCounts = acc.getFolderToLanguageToCounts()
                                 .computeIfAbsent(folderPath, k -> new HashMap<>())
@@ -316,43 +344,17 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                                 genericLineCount,
                                 hasParseFailure));
                     } else if (s instanceof PlainText) {
-                        if (s.getSourcePath().endsWith(".js") || s.getSourcePath().endsWith(".jsx") || s.getSourcePath().endsWith(".mjs")) {
-                            Counts javascriptCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Javascript", k -> new Counts());
-                            javascriptCounts.fileCount++;
-                            javascriptCounts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "JavaScript",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s.getSourcePath().endsWith(".ts") || s.getSourcePath().endsWith(".tsx")) {
-                            Counts typescriptCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("TypeScript", k -> new Counts());
-                            typescriptCounts.fileCount++;
-                            typescriptCounts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Typescript",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else {
-                            Counts plainTextCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Plain text", k -> new Counts());
-                            plainTextCounts.fileCount++;
-                            plainTextCounts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Plain text",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        }
+                        Counts plainTextCounts = acc.getFolderToLanguageToCounts()
+                                .computeIfAbsent(folderPath, k -> new HashMap<>())
+                                .computeIfAbsent("Plain text", k -> new Counts());
+                        plainTextCounts.fileCount++;
+                        plainTextCounts.lineCount += genericLineCount;
+                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                                s.getSourcePath().toString(),
+                                "Plain text",
+                                s.getClass().getName(),
+                                genericLineCount,
+                                hasParseFailure));
                     } else if (s instanceof ParseError) {
                         Counts parseErrorCounts = acc.getFolderToLanguageToCounts()
                                 .computeIfAbsent(folderPath, k -> new HashMap<>())

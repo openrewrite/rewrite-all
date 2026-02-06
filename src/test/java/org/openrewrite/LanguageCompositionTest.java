@@ -27,6 +27,10 @@ import org.openrewrite.text.PlainText;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.openrewrite.PathUtils.separatorsToSystem;
 import static org.openrewrite.java.Assertions.java;
+import static org.openrewrite.javascript.Assertions.javascript;
+import static org.openrewrite.javascript.Assertions.jsx;
+import static org.openrewrite.javascript.Assertions.tsx;
+import static org.openrewrite.javascript.Assertions.typescript;
 import static org.openrewrite.test.SourceSpecs.dir;
 import static org.openrewrite.test.SourceSpecs.text;
 
@@ -111,6 +115,115 @@ class LanguageCompositionTest implements RewriteTest {
     }
 
     @Test
+    void javascriptAndTypescript() {
+        rewriteRun(
+          spec -> {
+              spec.dataTable(LanguageCompositionPerRepository.Row.class, table -> {
+                  assertThat(table).hasSize(2);
+                  boolean hasJavaScript = false;
+                  boolean hasTypescript = false;
+                  for (LanguageCompositionPerRepository.Row row : table) {
+                      if ("JavaScript".equals(row.getLanguage())) {
+                          assertThat(row.getFileCount()).isEqualTo(3);
+                          hasJavaScript = true;
+                      } else if ("Typescript".equals(row.getLanguage())) {
+                          assertThat(row.getFileCount()).isEqualTo(2);
+                          hasTypescript = true;
+                      }
+                  }
+                  assertThat(hasJavaScript).isTrue();
+                  assertThat(hasTypescript).isTrue();
+              });
+              spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
+                  assertThat(table).hasSize(5);
+                  boolean hasJavaScript = false;
+                  boolean hasTypescript = false;
+                  for (LanguageCompositionPerFile.Row row : table) {
+                      if ("JavaScript".equals(row.getLanguage())) {
+                          hasJavaScript = true;
+                      } else if ("Typescript".equals(row.getLanguage())) {
+                          hasTypescript = true;
+                      }
+                  }
+                  assertThat(hasJavaScript).isTrue();
+                  assertThat(hasTypescript).isTrue();
+              });
+              spec.dataTable(LanguageCompositionPerFolder.Row.class, table -> {
+                  assertThat(table)
+                    .hasSize(2)
+                    .contains(
+                      new LanguageCompositionPerFolder.Row(separatorsToSystem("src/javascript"), "JavaScript", 3, 15),
+                      new LanguageCompositionPerFolder.Row(separatorsToSystem("src/typescript"), "Typescript", 2, 14)
+                    );
+              });
+          },
+          dir("src/javascript",
+            javascript(
+              //language=javascript
+              """
+                console.log("Hello, world!");
+                """,
+              sourceSpecs -> sourceSpecs.path("example.js")
+            ),
+            jsx(
+              //language=jsx
+              """
+                import React from 'react';
+
+                // A minimal functional component
+                const App = () => {
+                    return (
+                      <div>
+                        <h1>Hello, World!</h1>
+                        <p>This is a minimal JSX example.</p>
+                      </div>
+                    );
+                };
+
+                export default App;
+                """,
+              sourceSpecs -> sourceSpecs.path("example.jsx")
+            ),
+            javascript(
+              //language=javascript
+              """
+                console.log("Hello, world!");
+                """,
+              sourceSpecs -> sourceSpecs.path("example.mjs")
+            )
+          ),
+          dir("src/typescript",
+            typescript(
+              //language=typescript
+              """
+                console.log("Hello, world!");
+                """,
+              sourceSpecs -> sourceSpecs.path("example.ts")
+            ),
+            tsx(
+              //language=tsx
+              """
+                import React from 'react';
+
+                // A minimal functional component
+                const App = () => {
+                    return (
+                      <div>
+                        <h1>Hello, World!</h1>
+                        <p>This is a minimal JSX example.</p>
+                      </div>
+                    );
+                };
+
+                export default App;
+                """,
+              sourceSpecs -> sourceSpecs.path("example.tsx")
+            )
+          )
+        );
+    }
+
+    @Test
     void hasParseFailures() {
         rewriteRun(
           spec -> {
@@ -124,7 +237,7 @@ class LanguageCompositionTest implements RewriteTest {
           java(
             """
               package com.whatever;
-                              
+              
               class A {
                   void foo() {
                   }
