@@ -279,7 +279,7 @@ class LanguageCompositionTest implements RewriteTest {
     }
 
     SourceSpecs textFileWithLineCount(int lineCount) {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         for (int i = 0; i < lineCount; i++) {
             sb.append("line ").append(i).append("\n");
         }
