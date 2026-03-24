@@ -36,6 +36,7 @@ class RecipeClasspathReportTest implements RewriteTest {
                 assertThat(rows).allSatisfy(row -> {
                     assertThat(row.getRecipeName()).isNotBlank();
                     assertThat(row.getDisplayName()).isNotBlank();
+                    assertThat(row.getJarPath()).isNotBlank();
                 });
             }),
           text("hello")
