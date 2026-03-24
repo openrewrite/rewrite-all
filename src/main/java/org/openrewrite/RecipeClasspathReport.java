@@ -19,6 +19,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.config.Environment;
+import org.openrewrite.internal.StringUtils;
 import org.openrewrite.table.RecipeClasspathRow;
 
 import java.net.URL;
@@ -34,6 +35,13 @@ import static java.util.Collections.emptyList;
 @EqualsAndHashCode(callSuper = false)
 @Value
 public class RecipeClasspathReport extends ScanningRecipe<RecipeClasspathReport.Accumulator> {
+
+    @Option(displayName = "Recipe name glob",
+            description = "A glob pattern to filter recipes by their fully qualified name. " +
+                    "For example, `org.openrewrite.java.*` will only include recipes in that package.",
+            required = false)
+    @Nullable
+    String recipeNameGlob;
 
     transient RecipeClasspathRow recipeClasspath = new RecipeClasspathRow(this);
 
@@ -70,6 +78,9 @@ public class RecipeClasspathReport extends ScanningRecipe<RecipeClasspathReport.
                 .build();
 
         for (Recipe recipe : env.listRecipes()) {
+            if (recipeNameGlob != null && !StringUtils.matchesGlob(recipe.getName(), recipeNameGlob)) {
+                continue;
+            }
             Class<?> recipeClass = recipe.getClass();
             String jarPath = "";
             String version = "";

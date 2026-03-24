@@ -28,18 +28,28 @@ class RecipeClasspathReportTest implements RewriteTest {
     @Test
     void listsRecipesOnClasspath() {
         rewriteRun(
-          spec -> spec.recipe(new RecipeClasspathReport())
+          spec -> spec.recipe(new RecipeClasspathReport(null))
             .dataTable(RecipeClasspathRow.Row.class, rows -> {
                 assertThat(rows).isNotEmpty();
                 assertThat(rows).anyMatch(row ->
                   row.getRecipeName().equals("org.openrewrite.RecipeClasspathReport"));
-                // Every row should have a non-blank recipe name and display name
                 assertThat(rows).allSatisfy(row -> {
                     assertThat(row.getRecipeName()).isNotBlank();
                     assertThat(row.getDisplayName()).isNotBlank();
                 });
             }),
-          // Provide a source file so the recipe run is triggered
+          text("hello")
+        );
+    }
+
+    @Test
+    void filtersByGlob() {
+        rewriteRun(
+          spec -> spec.recipe(new RecipeClasspathReport("org.openrewrite.RecipeClasspath*"))
+            .dataTable(RecipeClasspathRow.Row.class, rows -> {
+                assertThat(rows).hasSize(1);
+                assertThat(rows.get(0).getRecipeName()).isEqualTo("org.openrewrite.RecipeClasspathReport");
+            }),
           text("hello")
         );
     }
