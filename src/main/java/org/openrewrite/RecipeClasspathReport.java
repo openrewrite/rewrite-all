@@ -21,7 +21,6 @@ import org.jspecify.annotations.Nullable;
 import org.openrewrite.config.Environment;
 import org.openrewrite.table.RecipeClasspathRow;
 
-import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.security.CodeSource;
@@ -72,9 +71,8 @@ public class RecipeClasspathReport extends ScanningRecipe<RecipeClasspathReport.
 
         for (Recipe recipe : env.listRecipes()) {
             Class<?> recipeClass = recipe.getClass();
-            String origin = "";
-            String version = "";
             String jarPath = "";
+            String version = "";
 
             try {
                 ProtectionDomain pd = recipeClass.getProtectionDomain();
@@ -83,15 +81,14 @@ public class RecipeClasspathReport extends ScanningRecipe<RecipeClasspathReport.
                     if (cs != null) {
                         URL location = cs.getLocation();
                         if (location != null) {
-                            origin = location.toString();
-                            Matcher m = VERSION_PATTERN.matcher(origin);
-                            if (m.find()) {
-                                version = m.group(1);
-                            }
                             try {
                                 jarPath = Paths.get(location.toURI()).toString();
                             } catch (Exception e) {
                                 jarPath = location.getPath();
+                            }
+                            Matcher m = VERSION_PATTERN.matcher(jarPath);
+                            if (m.find()) {
+                                version = m.group(1);
                             }
                         }
                     }
@@ -102,9 +99,8 @@ public class RecipeClasspathReport extends ScanningRecipe<RecipeClasspathReport.
             recipeClasspath.insertRow(ctx, new RecipeClasspathRow.Row(
                     recipe.getName(),
                     recipe.getDisplayName(),
-                    origin,
-                    version,
-                    jarPath
+                    jarPath,
+                    version
             ));
         }
         return emptyList();

@@ -40,16 +40,12 @@ public class RecipeClasspathRow extends DataTable<RecipeClasspathRow.Row> {
                 description = "Human-readable display name of the recipe.")
         String displayName;
 
-        @Column(displayName = "Origin",
-                description = "Code source location (JAR or directory) the recipe was loaded from.")
-        String origin;
+        @Column(displayName = "JAR path",
+                description = "Full filesystem path to the JAR containing the recipe.")
+        String jarPath;
 
         @Column(displayName = "Version",
                 description = "Version of the artifact containing the recipe, if determinable.")
         String version;
-
-        @Column(displayName = "JAR path",
-                description = "Full filesystem path to the JAR containing the recipe.")
-        String jarPath;
     }
 }
