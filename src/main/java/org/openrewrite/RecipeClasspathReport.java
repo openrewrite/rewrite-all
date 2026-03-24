@@ -21,7 +21,9 @@ import org.jspecify.annotations.Nullable;
 import org.openrewrite.config.Environment;
 import org.openrewrite.table.RecipeClasspathRow;
 
+import java.net.URI;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.Collection;
@@ -45,7 +47,7 @@ public class RecipeClasspathReport extends ScanningRecipe<RecipeClasspathReport.
 
     @Override
     public String getDescription() {
-        return "Lists all recipes available on the classpath with their origin, version, and classloader. " +
+        return "Lists all recipes available on the classpath with their origin, version, and JAR path. " +
                 "Useful for debugging recipe loading and version conflicts.";
     }
 
@@ -72,7 +74,7 @@ public class RecipeClasspathReport extends ScanningRecipe<RecipeClasspathReport.
             Class<?> recipeClass = recipe.getClass();
             String origin = "";
             String version = "";
-            String classloader = String.valueOf(recipeClass.getClassLoader());
+            String jarPath = "";
 
             try {
                 ProtectionDomain pd = recipeClass.getProtectionDomain();
@@ -86,6 +88,11 @@ public class RecipeClasspathReport extends ScanningRecipe<RecipeClasspathReport.
                             if (m.find()) {
                                 version = m.group(1);
                             }
+                            try {
+                                jarPath = Paths.get(location.toURI()).toString();
+                            } catch (Exception e) {
+                                jarPath = location.getPath();
+                            }
                         }
                     }
                 }
@@ -97,7 +104,7 @@ public class RecipeClasspathReport extends ScanningRecipe<RecipeClasspathReport.
                     recipe.getDisplayName(),
                     origin,
                     version,
-                    classloader
+                    jarPath
             ));
         }
         return emptyList();

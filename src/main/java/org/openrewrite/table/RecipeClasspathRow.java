@@ -27,7 +27,7 @@ public class RecipeClasspathRow extends DataTable<RecipeClasspathRow.Row> {
     public RecipeClasspathRow(Recipe recipe) {
         super(recipe,
                 "Recipe classpath report",
-                "Lists all recipes available on the classpath with their origin, version, and classloader information.");
+                "Lists all recipes available on the classpath with their origin, version, and JAR path.");
     }
 
     @Value
@@ -48,8 +48,8 @@ public class RecipeClasspathRow extends DataTable<RecipeClasspathRow.Row> {
                 description = "Version of the artifact containing the recipe, if determinable.")
         String version;
 
-        @Column(displayName = "Classloader",
-                description = "Classloader that loaded the recipe class.")
-        String classloader;
+        @Column(displayName = "JAR path",
+                description = "Full filesystem path to the JAR containing the recipe.")
+        String jarPath;
     }
 }
