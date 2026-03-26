@@ -47,8 +47,8 @@ class LanguageCompositionTest implements RewriteTest {
           spec -> {
               spec.dataTable(LanguageCompositionPerRepository.Row.class, table -> {
                   assertThat(table).hasSize(2);
-                  boolean hasJava = false;
-                  boolean hasPlainText = false;
+                  var hasJava = false;
+                  var hasPlainText = false;
                   for (LanguageCompositionPerRepository.Row row : table) {
                       if ("Java".equals(row.getLanguage())) {
                           assertThat(row.getFileCount()).isOne();
@@ -63,8 +63,8 @@ class LanguageCompositionTest implements RewriteTest {
               });
               spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
                   assertThat(table).hasSize(3);
-                  boolean hasJava = false;
-                  boolean hasPlainText = false;
+                  var hasJava = false;
+                  var hasPlainText = false;
                   for (LanguageCompositionPerFile.Row row : table) {
                       if ("Java".equals(row.getLanguage())) {
                           hasJava = true;
@@ -120,8 +120,8 @@ class LanguageCompositionTest implements RewriteTest {
           spec -> {
               spec.dataTable(LanguageCompositionPerRepository.Row.class, table -> {
                   assertThat(table).hasSize(2);
-                  boolean hasJavaScript = false;
-                  boolean hasTypescript = false;
+                  var hasJavaScript = false;
+                  var hasTypescript = false;
                   for (LanguageCompositionPerRepository.Row row : table) {
                       if ("JavaScript".equals(row.getLanguage())) {
                           assertThat(row.getFileCount()).isEqualTo(3);
@@ -136,8 +136,8 @@ class LanguageCompositionTest implements RewriteTest {
               });
               spec.dataTable(LanguageCompositionPerFile.Row.class, table -> {
                   assertThat(table).hasSize(5);
-                  boolean hasJavaScript = false;
-                  boolean hasTypescript = false;
+                  var hasJavaScript = false;
+                  var hasTypescript = false;
                   for (LanguageCompositionPerFile.Row row : table) {
                       if ("JavaScript".equals(row.getLanguage())) {
                           hasJavaScript = true;
@@ -280,7 +280,7 @@ class LanguageCompositionTest implements RewriteTest {
 
     SourceSpecs textFileWithLineCount(int lineCount) {
         var sb = new StringBuilder();
-        for (int i = 0; i < lineCount; i++) {
+        for (var i = 0; i < lineCount; i++) {
             sb.append("line ").append(i).append("\n");
         }
         return text(sb.toString());
