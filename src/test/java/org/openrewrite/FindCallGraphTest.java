@@ -382,7 +382,7 @@ class FindCallGraphTest implements RewriteTest {
                 "println",
                 "kotlin.Any",
                 CallGraph.ResourceType.METHOD,
-                "kotlin.Unit"
+                "void"
               )
             )
           ),
