@@ -250,6 +250,20 @@ class FindCallGraphTest implements RewriteTest {
         rewriteRun(
           spec -> spec.dataTable(CallGraph.Row.class, row ->
             assertThat(row).containsExactly(
+              // Local variable `C c` emits a REFERENCE edge for the declared type.
+              new CallGraph.Row(
+                "unknown",
+                "A$B",
+                "b",
+                "",
+                CallGraph.ResourceType.METHOD,
+                CallGraph.ResourceAction.REFERENCE,
+                "A$C",
+                "",
+                "",
+                CallGraph.ResourceType.CLASS,
+                ""
+              ),
               new CallGraph.Row(
                 "unknown",
                 "A$B",
@@ -371,6 +385,21 @@ class FindCallGraphTest implements RewriteTest {
         rewriteRun(
           spec -> spec.dataTable(CallGraph.Row.class, row ->
             assertThat(row).containsExactly(
+              // Parameter type `Array<String>` emits a REFERENCE edge for the
+              // array element type attributed to the enclosing method.
+              new CallGraph.Row(
+                "unknown",
+                "A$Companion",
+                "main",
+                "kotlin.Array<kotlin.String>",
+                CallGraph.ResourceType.METHOD,
+                CallGraph.ResourceAction.REFERENCE,
+                "kotlin.Array",
+                "",
+                "",
+                CallGraph.ResourceType.CLASS,
+                ""
+              ),
               new CallGraph.Row(
                 "unknown",
                 "A$Companion",
@@ -407,6 +436,21 @@ class FindCallGraphTest implements RewriteTest {
         rewriteRun(
           spec -> spec.dataTable(CallGraph.Row.class, row ->
             assertThat(row).containsExactly(
+              // Field type reference: attributed to the class (field declarations
+              // have no enclosing method).
+              new CallGraph.Row(
+                "unknown",
+                "A",
+                "",
+                "",
+                CallGraph.ResourceType.CLASS,
+                CallGraph.ResourceAction.REFERENCE,
+                "java.lang.String",
+                "",
+                "",
+                CallGraph.ResourceType.CLASS,
+                ""
+              ),
               new CallGraph.Row(
                 "unknown",
                 "A",
@@ -432,6 +476,20 @@ class FindCallGraphTest implements RewriteTest {
                 "",
                 CallGraph.ResourceType.METHOD,
                 "java.lang.String"
+              ),
+              // Return type reference on `foo()`.
+              new CallGraph.Row(
+                "unknown",
+                "A",
+                "foo",
+                "",
+                CallGraph.ResourceType.METHOD,
+                CallGraph.ResourceAction.REFERENCE,
+                "java.lang.String",
+                "",
+                "",
+                CallGraph.ResourceType.CLASS,
+                ""
               )
             )
           ),
@@ -449,10 +507,225 @@ class FindCallGraphTest implements RewriteTest {
     }
 
     @Test
+    void classLevelTypeReferences() {
+        // Imports, extends-adjacent type uses via field declarations, field types, and
+        // method parameter / return types should all emit REFERENCE edges so reachability
+        // closures can see "this scope depends on that class" without invoking a specific
+        // method on the referenced class.
+        rewriteRun(
+          spec -> spec
+            .recipe(new FindCallGraph(false))
+            .dataTable(CallGraph.Row.class, row -> {
+                // Import -> class-level reference from the file to the imported class.
+                assertThat(row).contains(
+                  new CallGraph.Row(
+                    "unknown", "Test", "", "", CallGraph.ResourceType.CLASS,
+                    CallGraph.ResourceAction.REFERENCE,
+                    "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
+                  )
+                );
+                // Field type reference: `Helper helper;` emits a class-level reference.
+                assertThat(row).contains(
+                  new CallGraph.Row(
+                    "unknown", "Test", "", "", CallGraph.ResourceType.CLASS,
+                    CallGraph.ResourceAction.REFERENCE,
+                    "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
+                  )
+                );
+                // Parameter type reference attributed to the enclosing method.
+                assertThat(row).contains(
+                  new CallGraph.Row(
+                    "unknown", "Test", "takesHelper", "other.Helper",
+                    CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
+                    "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
+                  )
+                );
+                // Return type reference attributed to the enclosing method.
+                assertThat(row).contains(
+                  new CallGraph.Row(
+                    "unknown", "Test", "makesHelper", "",
+                    CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
+                    "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
+                  )
+                );
+            }),
+          //language=java
+          java(
+                """
+            package other;
+            public class Helper {}
+            """
+          ),
+          //language=java
+          java(
+                """
+            import other.Helper;
+            class Test {
+                Helper helper;
+                void takesHelper(Helper h) {}
+                Helper makesHelper() { return new Helper(); }
+            }
+            """
+          )
+        );
+    }
+
+    @Test
+    void castAndInstanceOfAndClassLiteral() {
+        // A cast, an instanceof check, and a class literal all emit REFERENCE edges
+        // attributed to the enclosing method.
+        rewriteRun(
+          spec -> spec
+            .recipe(new FindCallGraph(false))
+            .dataTable(CallGraph.Row.class, row -> {
+                assertThat(row).contains(
+                  new CallGraph.Row(
+                    "unknown", "Test", "check", "java.lang.Object",
+                    CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
+                    "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
+                  )
+                );
+            }),
+          //language=java
+          java(
+                """
+            package other;
+            public class Helper {}
+            """
+          ),
+          //language=java
+          java(
+                """
+            import other.Helper;
+            class Test {
+                void check(Object o) {
+                    if (o instanceof Helper) {
+                        Helper h = (Helper) o;
+                        Class<?> c = Helper.class;
+                    }
+                }
+            }
+            """
+          )
+        );
+    }
+
+    @Test
+    void annotationClassValueReferences() {
+        // @MyAnnotation(Helper.class) on a class or method must emit a REFERENCE edge
+        // from the annotated declaration to Helper, so reachability closures can see
+        // class-value annotation arguments as dependencies (e.g. @RunWith, @ExtendWith,
+        // custom validators that take a rule class).
+        rewriteRun(
+          spec -> spec
+            .recipe(new FindCallGraph(false))
+            .dataTable(CallGraph.Row.class, row -> {
+                // Class-level annotation: edge attributed to the class.
+                assertThat(row).contains(
+                  new CallGraph.Row(
+                    "unknown", "Test", "", "", CallGraph.ResourceType.CLASS,
+                    CallGraph.ResourceAction.REFERENCE,
+                    "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
+                  )
+                );
+                // Method-level annotation: edge attributed to the method.
+                assertThat(row).contains(
+                  new CallGraph.Row(
+                    "unknown", "Test", "annotated", "",
+                    CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
+                    "other.Other", "", "", CallGraph.ResourceType.CLASS, ""
+                  )
+                );
+                // Array-valued annotation argument: edges for each element.
+                assertThat(row).contains(
+                  new CallGraph.Row(
+                    "unknown", "Test", "manyAnnotated", "",
+                    CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
+                    "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
+                  )
+                );
+                assertThat(row).contains(
+                  new CallGraph.Row(
+                    "unknown", "Test", "manyAnnotated", "",
+                    CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
+                    "other.Other", "", "", CallGraph.ResourceType.CLASS, ""
+                  )
+                );
+            }),
+          //language=java
+          java(
+                """
+            package other;
+            public class Helper {}
+            """
+          ),
+          //language=java
+          java(
+                """
+            package other;
+            public class Other {}
+            """
+          ),
+          //language=java
+          java(
+                """
+            package x;
+            import java.lang.annotation.*;
+            @Retention(RetentionPolicy.RUNTIME)
+            public @interface One {
+                Class<?> value();
+            }
+            """
+          ),
+          //language=java
+          java(
+                """
+            package x;
+            import java.lang.annotation.*;
+            @Retention(RetentionPolicy.RUNTIME)
+            public @interface Many {
+                Class<?>[] value();
+            }
+            """
+          ),
+          //language=java
+          java(
+                """
+            import other.Helper;
+            import other.Other;
+            import x.One;
+            import x.Many;
+            @One(Helper.class)
+            class Test {
+                @One(Other.class)
+                void annotated() {}
+
+                @Many({Helper.class, Other.class})
+                void manyAnnotated() {}
+            }
+            """
+          )
+        );
+    }
+
+    @Test
     void initializerBlocks() {
         rewriteRun(
           spec -> spec.dataTable(CallGraph.Row.class, row ->
             assertThat(row).containsExactly(
+              new CallGraph.Row(
+                "unknown",
+                "A",
+                "",
+                "",
+                CallGraph.ResourceType.CLASS,
+                CallGraph.ResourceAction.REFERENCE,
+                "java.lang.String",
+                "",
+                "",
+                CallGraph.ResourceType.CLASS,
+                ""
+              ),
               new CallGraph.Row(
                 "unknown",
                 "A",
@@ -478,6 +751,19 @@ class FindCallGraphTest implements RewriteTest {
                 "",
                 CallGraph.ResourceType.METHOD,
                 "java.lang.String"
+              ),
+              new CallGraph.Row(
+                "unknown",
+                "A",
+                "foo",
+                "",
+                CallGraph.ResourceType.METHOD,
+                CallGraph.ResourceAction.REFERENCE,
+                "java.lang.String",
+                "",
+                "",
+                CallGraph.ResourceType.CLASS,
+                ""
               )
             )
           ),

@@ -82,12 +82,30 @@ public class CallGraph extends DataTable<CallGraph.Row> {
     public enum ResourceType {
         METHOD,
         FIELD,
-        CONSTRUCTOR
+        CONSTRUCTOR,
+        /**
+         * The resource is a class referenced as a type rather than invoked. Used for
+         * import declarations, field/parameter/local/return types, type casts,
+         * {@code instanceof} targets, class literals ({@code X.class}), and array
+         * element types. {@code toName} on these rows is always empty since the
+         * reference is to the class as a whole, not to a particular method or field.
+         */
+        CLASS
     }
 
     public enum ResourceAction {
         CALL,
         READ,
-        WRITE
+        WRITE,
+        /**
+         * A non-invoking type reference. Produced for syntactic positions where code
+         * names a type without calling or reading a specific member -- e.g. an
+         * {@code import}, a field declaration, a cast, or a class literal.
+         * Consumers that build reachability closures over the graph should treat
+         * {@code REFERENCE} edges the same as {@code CALL}-to-{@code <init>} edges
+         * for the purpose of class-level reachability (both indicate "this scope
+         * depends on that class").
+         */
+        REFERENCE
     }
 }
