@@ -207,7 +207,7 @@ public class FindCallGraph extends Recipe {
             @Override
             public J.NewArray visitNewArray(J.NewArray newArray, ExecutionContext ctx) {
                 if (newArray.getTypeExpression() instanceof TypeTree) {
-                    recordTypeTree((TypeTree) newArray.getTypeExpression(), ctx);
+                    recordTypeTree(newArray.getTypeExpression(), ctx);
                 }
                 return super.visitNewArray(newArray, ctx);
             }

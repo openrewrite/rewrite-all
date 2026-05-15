@@ -516,32 +516,33 @@ class FindCallGraphTest implements RewriteTest {
           spec -> spec
             .recipe(new FindCallGraph(false))
             .dataTable(CallGraph.Row.class, row -> {
-                // Import -> class-level reference from the file to the imported class.
-                assertThat(row).contains(
+                assertThat(row)
+                        // Import -> class-level reference from the file to the imported class.
+                        .contains(
                   new CallGraph.Row(
                     "unknown", "Test", "", "", CallGraph.ResourceType.CLASS,
                     CallGraph.ResourceAction.REFERENCE,
                     "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
                   )
-                );
-                // Field type reference: `Helper helper;` emits a class-level reference.
-                assertThat(row).contains(
+                )
+                        // Field type reference: `Helper helper;` emits a class-level reference.
+                        .contains(
                   new CallGraph.Row(
                     "unknown", "Test", "", "", CallGraph.ResourceType.CLASS,
                     CallGraph.ResourceAction.REFERENCE,
                     "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
                   )
-                );
-                // Parameter type reference attributed to the enclosing method.
-                assertThat(row).contains(
+                )
+                        // Parameter type reference attributed to the enclosing method.
+                        .contains(
                   new CallGraph.Row(
                     "unknown", "Test", "takesHelper", "other.Helper",
                     CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
                     "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
                   )
-                );
-                // Return type reference attributed to the enclosing method.
-                assertThat(row).contains(
+                )
+                        // Return type reference attributed to the enclosing method.
+                        .contains(
                   new CallGraph.Row(
                     "unknown", "Test", "makesHelper", "",
                     CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
@@ -620,31 +621,32 @@ class FindCallGraphTest implements RewriteTest {
           spec -> spec
             .recipe(new FindCallGraph(false))
             .dataTable(CallGraph.Row.class, row -> {
-                // Class-level annotation: edge attributed to the class.
-                assertThat(row).contains(
+                assertThat(row)
+                        // Class-level annotation: edge attributed to the class.
+                        .contains(
                   new CallGraph.Row(
                     "unknown", "Test", "", "", CallGraph.ResourceType.CLASS,
                     CallGraph.ResourceAction.REFERENCE,
                     "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
                   )
-                );
-                // Method-level annotation: edge attributed to the method.
-                assertThat(row).contains(
+                )
+                        // Method-level annotation: edge attributed to the method.
+                        .contains(
                   new CallGraph.Row(
                     "unknown", "Test", "annotated", "",
                     CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
                     "other.Other", "", "", CallGraph.ResourceType.CLASS, ""
                   )
-                );
-                // Array-valued annotation argument: edges for each element.
-                assertThat(row).contains(
+                )
+                        // Array-valued annotation argument: edges for each element.
+                        .contains(
                   new CallGraph.Row(
                     "unknown", "Test", "manyAnnotated", "",
                     CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
                     "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
                   )
-                );
-                assertThat(row).contains(
+                )
+                        .contains(
                   new CallGraph.Row(
                     "unknown", "Test", "manyAnnotated", "",
                     CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
