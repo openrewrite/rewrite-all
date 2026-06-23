@@ -15,7 +15,13 @@
  */
 package org.openrewrite;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+import org.openrewrite.internal.InMemoryLargeSourceSet;
+import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.Space;
+import org.openrewrite.marker.Markers;
+import org.openrewrite.python.tree.Py;
 import org.openrewrite.table.LanguageCompositionPerFile;
 import org.openrewrite.table.LanguageCompositionPerFolder;
 import org.openrewrite.table.LanguageCompositionPerRepository;
@@ -23,6 +29,13 @@ import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 import org.openrewrite.test.SourceSpecs;
 import org.openrewrite.text.PlainText;
+
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.openrewrite.PathUtils.separatorsToSystem;
@@ -276,6 +289,120 @@ class LanguageCompositionTest implements RewriteTest {
           ),
           textFileWithLineCount(4)
         );
+    }
+
+    @Test
+    void successfulParseRemainsClassifiedWhenLineCountingFails() {
+        // A Py$CompilationUnit is a successful Python parse. In production the Python LST is printed over RPC to
+        // count lines; when that printing fails (e.g. the RPC worker is out of memory) the file must still be
+        // reported as Python rather than rolled up under "Error". See customer-requests#2326.
+        SourceFile pythonThatFailsToPrint = new ThrowingPy();
+        RecipeRun run = new LanguageComposition().run(
+          new InMemoryLargeSourceSet(List.of(pythonThatFailsToPrint)),
+          new InMemoryExecutionContext());
+
+        List<LanguageCompositionPerFile.Row> rows = run.getDataTableRows(LanguageCompositionPerFile.class);
+        assertThat(rows).hasSize(1);
+        assertThat(rows.getFirst().getLanguage()).isEqualTo("Python");
+        assertThat(rows.getFirst().getLinesOfText()).isZero();
+    }
+
+    /**
+     * A successfully parsed Python source file whose printing throws, simulating an RPC printing failure.
+     */
+    @SuppressWarnings("unchecked")
+    private static class ThrowingPy implements Py, SourceFile {
+        private final UUID id = Tree.randomId();
+
+        @Override
+        public UUID getId() {
+            return id;
+        }
+
+        @Override
+        public <T extends Tree> T withId(UUID id) {
+            return (T) this;
+        }
+
+        @Override
+        public Markers getMarkers() {
+            return Markers.EMPTY;
+        }
+
+        @Override
+        public <T extends Tree> T withMarkers(Markers markers) {
+            return (T) this;
+        }
+
+        @Override
+        public <P> boolean isAcceptable(TreeVisitor<?, P> v, P p) {
+            return true;
+        }
+
+        @Override
+        public Space getPrefix() {
+            return Space.EMPTY;
+        }
+
+        @Override
+        public <J2 extends J> J2 withPrefix(Space space) {
+            return (J2) this;
+        }
+
+        @Override
+        public Path getSourcePath() {
+            return Paths.get("src/example.py");
+        }
+
+        @Override
+        public <T extends SourceFile> T withSourcePath(Path path) {
+            return (T) this;
+        }
+
+        @Override
+        public Charset getCharset() {
+            return StandardCharsets.UTF_8;
+        }
+
+        @Override
+        public <T extends SourceFile> T withCharset(Charset charset) {
+            return (T) this;
+        }
+
+        @Override
+        public boolean isCharsetBomMarked() {
+            return false;
+        }
+
+        @Override
+        public <T extends SourceFile> T withCharsetBomMarked(boolean marked) {
+            return (T) this;
+        }
+
+        @Override
+        public @Nullable Checksum getChecksum() {
+            return null;
+        }
+
+        @Override
+        public <T extends SourceFile> T withChecksum(Checksum checksum) {
+            return (T) this;
+        }
+
+        @Override
+        public @Nullable FileAttributes getFileAttributes() {
+            return null;
+        }
+
+        @Override
+        public <T extends SourceFile> T withFileAttributes(FileAttributes fileAttributes) {
+            return (T) this;
+        }
+
+        @Override
+        public <P> String printAll(PrintOutputCapture<P> out) {
+            throw new IllegalStateException("Simulated RPC printing failure for Python LST");
+        }
     }
 
     SourceSpecs textFileWithLineCount(int lineCount) {
