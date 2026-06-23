@@ -25,6 +25,7 @@ import org.openrewrite.python.tree.Py;
 import org.openrewrite.table.LanguageCompositionPerFile;
 import org.openrewrite.table.LanguageCompositionPerFolder;
 import org.openrewrite.table.LanguageCompositionPerRepository;
+import org.openrewrite.table.SourcesFileErrors;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 import org.openrewrite.test.SourceSpecs;
@@ -305,6 +306,13 @@ class LanguageCompositionTest implements RewriteTest {
         assertThat(rows).hasSize(1);
         assertThat(rows.getFirst().getLanguage()).isEqualTo("Python");
         assertThat(rows.getFirst().getLinesOfText()).isZero();
+
+        // The counting failure is not silently swallowed: it is recorded in the standard error table.
+        List<SourcesFileErrors.Row> errors = run.getDataTableRows(SourcesFileErrors.class);
+        assertThat(errors).singleElement().satisfies(error -> {
+            assertThat(error.getSourcePath()).isEqualTo("src/example.py");
+            assertThat(error.getStackTrace()).contains("Simulated RPC printing failure for Python LST");
+        });
     }
 
     /**

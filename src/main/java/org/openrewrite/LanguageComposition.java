@@ -20,6 +20,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.binary.Binary;
+import org.openrewrite.internal.ExceptionUtils;
 import org.openrewrite.cobol.tree.CobolPreprocessor;
 import org.openrewrite.controlm.tree.ControlM;
 import org.openrewrite.csharp.tree.Cs;
@@ -39,6 +40,7 @@ import org.openrewrite.remote.Remote;
 import org.openrewrite.table.LanguageCompositionPerFile;
 import org.openrewrite.table.LanguageCompositionPerFolder;
 import org.openrewrite.table.LanguageCompositionPerRepository;
+import org.openrewrite.table.SourcesFileErrors;
 import org.openrewrite.text.PlainText;
 import org.openrewrite.toml.tree.Toml;
 import org.openrewrite.tree.ParseError;
@@ -61,6 +63,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
     transient LanguageCompositionPerRepository perRepositoryReport = new LanguageCompositionPerRepository(this);
     transient LanguageCompositionPerFolder perFolderReport = new LanguageCompositionPerFolder(this);
     transient LanguageCompositionPerFile perFileReport = new LanguageCompositionPerFile(this);
+    transient SourcesFileErrors errorsTable = new SourcesFileErrors(this);
 
     String displayName = "Language composition report";
 
@@ -128,9 +131,10 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
 
                 // Counting lines prints the LST, which for some languages (e.g. Python) happens over RPC and can
                 // fail independently of a successful parse. A counting failure must not reclassify the file as
-                // "Error"; it remains classified by its language with a line count of zero.
-                int linesOfText = OTHER.equals(language) ? 0 : safeLineCount(() -> LineCounter.count(s));
-                int languageLineCount = OTHER.equals(language) ? 0 : safeLineCount(() -> codeLineCount(s, language, linesOfText));
+                // "Error"; it remains classified by its language with a line count of zero, while the failure is
+                // recorded in the standard error table so it stays diagnosable.
+                int linesOfText = OTHER.equals(language) ? 0 : safeLineCount(s, ctx, () -> LineCounter.count(s));
+                int languageLineCount = OTHER.equals(language) ? 0 : safeLineCount(s, ctx, () -> codeLineCount(s, language, linesOfText));
 
                 Counts counts = acc.getFolderToLanguageToCounts()
                         .computeIfAbsent(folderPath, k -> new HashMap<>())
@@ -236,10 +240,21 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
         }
     }
 
-    private static int safeLineCount(IntSupplier counter) {
+    /**
+     * Count lines without letting a counting failure reclassify the file. Counting prints the LST, which for
+     * some languages happens over RPC and can fail even though the file parsed successfully. Recoverable
+     * failures are recorded in {@link SourcesFileErrors} (the same table the framework uses for recipe errors)
+     * and degrade to a count of zero; unrecoverable {@link Error}s (e.g. {@link OutOfMemoryError}) are allowed
+     * to propagate.
+     */
+    private int safeLineCount(SourceFile s, ExecutionContext ctx, IntSupplier counter) {
         try {
             return counter.getAsInt();
-        } catch (RuntimeException | Error e) {
+        } catch (RuntimeException e) {
+            errorsTable.insertRow(ctx, new SourcesFileErrors.Row(
+                    s.getSourcePath().toString(),
+                    getName(),
+                    ExceptionUtils.sanitizeStackTrace(e, LanguageComposition.class)));
             return 0;
         }
     }
