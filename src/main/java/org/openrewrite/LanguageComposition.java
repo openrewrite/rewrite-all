@@ -20,6 +20,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.binary.Binary;
+import org.openrewrite.internal.ExceptionUtils;
 import org.openrewrite.cobol.tree.CobolPreprocessor;
 import org.openrewrite.controlm.tree.ControlM;
 import org.openrewrite.csharp.tree.Cs;
@@ -39,6 +40,7 @@ import org.openrewrite.remote.Remote;
 import org.openrewrite.table.LanguageCompositionPerFile;
 import org.openrewrite.table.LanguageCompositionPerFolder;
 import org.openrewrite.table.LanguageCompositionPerRepository;
+import org.openrewrite.table.SourcesFileErrors;
 import org.openrewrite.text.PlainText;
 import org.openrewrite.toml.tree.Toml;
 import org.openrewrite.tree.ParseError;
@@ -48,6 +50,7 @@ import org.openrewrite.yaml.tree.Yaml;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.IntSupplier;
 
 import static java.util.Collections.emptyList;
 
@@ -55,9 +58,12 @@ import static java.util.Collections.emptyList;
 @Value
 public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accumulator> {
 
+    private static final String OTHER = "Other/unknown/unparseable";
+
     transient LanguageCompositionPerRepository perRepositoryReport = new LanguageCompositionPerRepository(this);
     transient LanguageCompositionPerFolder perFolderReport = new LanguageCompositionPerFolder(this);
     transient LanguageCompositionPerFile perFileReport = new LanguageCompositionPerFile(this);
+    transient SourcesFileErrors errorsTable = new SourcesFileErrors(this);
 
     String displayName = "Language composition report";
 
@@ -96,293 +102,16 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
 
                 SourceFile s = (SourceFile) tree;
                 String folderPath = containingFolderPath(s);
+                // Parse failures *should* only ever appear on PlainText sources, but always checking finds a parser bug
+                boolean hasParseFailure = s.getMarkers().findFirst(ParseExceptionResult.class).isPresent();
+
+                String language;
                 try {
-                    // Parse failures *should* only ever appear on PlainText sources, but always checking finds a parser bug
-                    boolean hasParseFailure = s.getMarkers().findFirst(ParseExceptionResult.class).isPresent();
-                    if (s instanceof Quark || s instanceof Binary || s instanceof Remote) {
-                        Counts quarkCounts = acc.getFolderToLanguageToCounts()
-                                .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                .computeIfAbsent("Other/unknown/unparseable", k -> new Counts());
-                        quarkCounts.fileCount++;
-                        perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                s.getSourcePath().toString(),
-                                "Other/unknown/unparseable",
-                                s.getClass().getName(),
-                                0,
-                                hasParseFailure));
-                    } else {
-                        int genericLineCount = LineCounter.count(s);
-                        if (s instanceof CobolPreprocessor.Copybook) {
-                            Counts copybookCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Copybook", k -> new Counts());
-                            copybookCounts.fileCount++;
-                            copybookCounts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Copybook",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.Cobol")) { // Also CobolPreprocessor
-                            Counts cobolCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Cobol", k -> new Counts());
-                            cobolCounts.fileCount++;
-                            cobolCounts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Cobol",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof ControlM) {
-                            Counts counts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Control-M", k -> new Counts());
-                            counts.fileCount++;
-                            counts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Control-M",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof Docker) {
-                            Counts counts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Docker", k -> new Counts());
-                            counts.fileCount++;
-                            counts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Docker",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof Jcl) {
-                            Counts counts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("JCL", k -> new Counts());
-                            counts.fileCount++;
-                            counts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "JCL",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof K) {
-                            Counts kotlinCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Kotlin", k -> new Counts());
-                            kotlinCounts.fileCount++;
-                            // Don't have a kotlin-specific counter yet and Java count should be very close
-                            kotlinCounts.lineCount += org.openrewrite.java.CountLinesVisitor.countLines(s);
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Kotlin",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof G) {
-                            Counts groovyCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Groovy", k -> new Counts());
-                            groovyCounts.fileCount++;
-                            groovyCounts.lineCount += org.openrewrite.groovy.CountLinesVisitor.countLines(s);
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Groovy",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof Py) {
-                            Counts pythonCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Python", k -> new Counts());
-                            pythonCounts.fileCount++;
-                            pythonCounts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Python",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof Cs.CompilationUnit) {
-                            Counts csharpCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("C#", k -> new Counts());
-                            csharpCounts.fileCount++;
-                            csharpCounts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "C#",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof JS) {
-                            String sourcePath = s.getSourcePath().toString();
-                            if (sourcePath.endsWith(".js") || sourcePath.endsWith(".jsx") || sourcePath.endsWith(".mjs")) {
-                                Counts javascriptCounts = acc.getFolderToLanguageToCounts()
-                                        .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                        .computeIfAbsent("JavaScript", k -> new Counts());
-                                javascriptCounts.fileCount++;
-                                javascriptCounts.lineCount += genericLineCount;
-                                perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                        sourcePath,
-                                        "JavaScript",
-                                        s.getClass().getName(),
-                                        genericLineCount,
-                                        hasParseFailure));
-                            } else if (sourcePath.endsWith(".ts") || sourcePath.endsWith(".tsx")) {
-                                Counts typescriptCounts = acc.getFolderToLanguageToCounts()
-                                        .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                        .computeIfAbsent("Typescript", k -> new Counts());
-                                typescriptCounts.fileCount++;
-                                typescriptCounts.lineCount += genericLineCount;
-                                perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                        sourcePath,
-                                        "Typescript",
-                                        s.getClass().getName(),
-                                        genericLineCount,
-                                        hasParseFailure));
-                            }
-                        } else if (s instanceof J) {
-                            Counts javaCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Java", k -> new Counts());
-                            javaCounts.fileCount++;
-                            javaCounts.lineCount += org.openrewrite.java.CountLinesVisitor.countLines(s);
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Java",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof Json) {
-                            Counts jsonCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Json", k -> new Counts());
-                            jsonCounts.fileCount++;
-                            jsonCounts.lineCount += org.openrewrite.json.CountLinesVisitor.countLines(s);
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Json",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof Hcl) {
-                            Counts hclCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Hcl", k -> new Counts());
-                            hclCounts.fileCount++;
-                            hclCounts.lineCount += org.openrewrite.hcl.CountLinesVisitor.countLines(s);
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Hcl",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof Properties) {
-                            Counts propertiesCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Properties", k -> new Counts());
-                            propertiesCounts.fileCount++;
-                            propertiesCounts.lineCount += org.openrewrite.properties.CountLinesVisitor.countLines(s);
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Properties",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof Proto) {
-                            Counts protobufCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Protobuf", k -> new Counts());
-                            protobufCounts.fileCount++;
-                            protobufCounts.lineCount += org.openrewrite.protobuf.CountLinesVisitor.countLines(s);
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Protobuf",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof Toml) {
-                            Counts tomlCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Toml", k -> new Counts());
-                            tomlCounts.fileCount++;
-                            tomlCounts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Toml",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof Xml) {
-                            Counts xmlCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Xml", k -> new Counts());
-                            xmlCounts.fileCount++;
-                            xmlCounts.lineCount += org.openrewrite.xml.CountLinesVisitor.countLines(s);
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Xml",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof Yaml) {
-                            Counts yamlCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Yaml", k -> new Counts());
-                            yamlCounts.fileCount++;
-                            yamlCounts.lineCount += org.openrewrite.yaml.CountLinesVisitor.countLines(s);
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Yaml",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof PlainText) {
-                            Counts plainTextCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Plain text", k -> new Counts());
-                            plainTextCounts.fileCount++;
-                            plainTextCounts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Plain text",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else if (s instanceof ParseError) {
-                            Counts parseErrorCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Parse error", k -> new Counts());
-                            parseErrorCounts.fileCount++;
-                            parseErrorCounts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Parse error",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        } else {
-                            Counts unknownCounts = acc.getFolderToLanguageToCounts()
-                                    .computeIfAbsent(folderPath, k -> new HashMap<>())
-                                    .computeIfAbsent("Unknown", k -> new Counts());
-                            unknownCounts.fileCount++;
-                            unknownCounts.lineCount += genericLineCount;
-                            perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
-                                    s.getSourcePath().toString(),
-                                    "Unknown",
-                                    s.getClass().getName(),
-                                    genericLineCount,
-                                    hasParseFailure));
-                        }
-                    }
+                    language = language(s);
                 } catch (RuntimeException | Error e) {
+                    // Classification itself failed, e.g. a NoClassDefFoundError when a language module is not on
+                    // the classpath. Record the file as "Error" so it still appears in the reports, then rethrow
+                    // so the failure also surfaces in the Error data table.
                     Counts errorCounts = acc.getFolderToLanguageToCounts()
                             .computeIfAbsent(folderPath, k -> new HashMap<>())
                             .computeIfAbsent("Error", k -> new Counts());
@@ -395,9 +124,139 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
                             false));
                     throw e;
                 }
+                if (language == null) {
+                    // A JavaScript/TypeScript source with an extension we don't report on
+                    return tree;
+                }
+
+                // Counting lines prints the LST, which for some languages (e.g. Python) happens over RPC and can
+                // fail independently of a successful parse. A counting failure must not reclassify the file as
+                // "Error"; it remains classified by its language with a line count of zero, while the failure is
+                // recorded in the standard error table so it stays diagnosable.
+                int linesOfText = OTHER.equals(language) ? 0 : safeLineCount(s, ctx, () -> LineCounter.count(s));
+                int languageLineCount = OTHER.equals(language) ? 0 : safeLineCount(s, ctx, () -> codeLineCount(s, language, linesOfText));
+
+                Counts counts = acc.getFolderToLanguageToCounts()
+                        .computeIfAbsent(folderPath, k -> new HashMap<>())
+                        .computeIfAbsent(language, k -> new Counts());
+                counts.fileCount++;
+                counts.lineCount += languageLineCount;
+                perFileReport.insertRow(ctx, new LanguageCompositionPerFile.Row(
+                        s.getSourcePath().toString(),
+                        language,
+                        s.getClass().getName(),
+                        linesOfText,
+                        hasParseFailure));
                 return tree;
             }
         };
+    }
+
+    /**
+     * Classify a source file by language. This relies only on cheap type checks so that, unlike line counting,
+     * it does not fail for a successfully parsed file. Returns {@code null} for JavaScript/TypeScript sources
+     * whose extension we don't report on. May throw a {@link NoClassDefFoundError} when a language module is not
+     * on the classpath, in which case the caller records the file as "Error".
+     */
+    private static @Nullable String language(SourceFile s) {
+        if (s instanceof Quark || s instanceof Binary || s instanceof Remote) {
+            return OTHER;
+        } else if (s instanceof CobolPreprocessor.Copybook) {
+            return "Copybook";
+        } else if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.Cobol")) { // Also CobolPreprocessor
+            return "Cobol";
+        } else if (s instanceof ControlM) {
+            return "Control-M";
+        } else if (s instanceof Docker) {
+            return "Docker";
+        } else if (s instanceof Jcl) {
+            return "JCL";
+        } else if (s instanceof K) {
+            return "Kotlin";
+        } else if (s instanceof G) {
+            return "Groovy";
+        } else if (s instanceof Py) {
+            return "Python";
+        } else if (s instanceof Cs.CompilationUnit) {
+            return "C#";
+        } else if (s instanceof JS) {
+            String sourcePath = s.getSourcePath().toString();
+            if (sourcePath.endsWith(".js") || sourcePath.endsWith(".jsx") || sourcePath.endsWith(".mjs")) {
+                return "JavaScript";
+            } else if (sourcePath.endsWith(".ts") || sourcePath.endsWith(".tsx")) {
+                return "Typescript";
+            }
+            return null;
+        } else if (s instanceof J) {
+            return "Java";
+        } else if (s instanceof Json) {
+            return "Json";
+        } else if (s instanceof Hcl) {
+            return "Hcl";
+        } else if (s instanceof Properties) {
+            return "Properties";
+        } else if (s instanceof Proto) {
+            return "Protobuf";
+        } else if (s instanceof Toml) {
+            return "Toml";
+        } else if (s instanceof Xml) {
+            return "Xml";
+        } else if (s instanceof Yaml) {
+            return "Yaml";
+        } else if (s instanceof PlainText) {
+            return "Plain text";
+        } else if (s instanceof ParseError) {
+            return "Parse error";
+        }
+        return "Unknown";
+    }
+
+    /**
+     * The number of lines of code attributed to the per-folder and per-repository reports. Languages with a
+     * dedicated counter use it; the rest fall back to the generic count of lines of text.
+     */
+    private static int codeLineCount(SourceFile s, String language, int genericLineCount) {
+        switch (language) {
+            case "Kotlin":
+                // Don't have a kotlin-specific counter yet and Java count should be very close
+            case "Java":
+                return org.openrewrite.java.CountLinesVisitor.countLines(s);
+            case "Groovy":
+                return org.openrewrite.groovy.CountLinesVisitor.countLines(s);
+            case "Json":
+                return org.openrewrite.json.CountLinesVisitor.countLines(s);
+            case "Hcl":
+                return org.openrewrite.hcl.CountLinesVisitor.countLines(s);
+            case "Properties":
+                return org.openrewrite.properties.CountLinesVisitor.countLines(s);
+            case "Protobuf":
+                return org.openrewrite.protobuf.CountLinesVisitor.countLines(s);
+            case "Xml":
+                return org.openrewrite.xml.CountLinesVisitor.countLines(s);
+            case "Yaml":
+                return org.openrewrite.yaml.CountLinesVisitor.countLines(s);
+            default:
+                return genericLineCount;
+        }
+    }
+
+    /**
+     * Count lines without letting a counting failure reclassify the file. Counting prints the LST, which for
+     * some languages happens over RPC and can fail even though the file parsed successfully. Recoverable
+     * failures are recorded in {@link SourcesFileErrors} (the same table the framework uses for recipe errors)
+     * and degrade to a count of zero; unrecoverable {@link Error}s (e.g. {@link OutOfMemoryError}) are allowed
+     * to propagate.
+     */
+    private int safeLineCount(SourceFile s, ExecutionContext ctx, IntSupplier counter) {
+        try {
+            return counter.getAsInt();
+        } catch (RuntimeException e) {
+            errorsTable.insertRow(ctx, new SourcesFileErrors.Row(
+                    s.getSourcePath().toString(),
+                    getName(),
+                    ExceptionUtils.sanitizeStackTrace(e, LanguageComposition.class)));
+            return 0;
+        }
     }
 
     @Override
