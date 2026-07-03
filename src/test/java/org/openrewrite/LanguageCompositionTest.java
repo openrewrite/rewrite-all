@@ -34,7 +34,6 @@ import org.openrewrite.text.PlainText;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
@@ -302,22 +301,20 @@ class LanguageCompositionTest implements RewriteTest {
           new InMemoryLargeSourceSet(List.of(pythonThatFailsToPrint)),
           new InMemoryExecutionContext());
 
-        List<LanguageCompositionPerFile.Row> rows = run.getDataTableRows(LanguageCompositionPerFile.class);
+        var rows = run.getDataTableRows(LanguageCompositionPerFile.class);
         assertThat(rows).hasSize(1);
         assertThat(rows.getFirst().getLanguage()).isEqualTo("Python");
         assertThat(rows.getFirst().getLinesOfText()).isZero();
 
         // The counting failure is not silently swallowed: it is recorded in the standard error table.
-        List<SourcesFileErrors.Row> errors = run.getDataTableRows(SourcesFileErrors.class);
+        var errors = run.getDataTableRows(SourcesFileErrors.class);
         assertThat(errors).singleElement().satisfies(error -> {
             assertThat(error.getSourcePath()).isEqualTo("src/example.py");
             assertThat(error.getStackTrace()).contains("Simulated RPC printing failure for Python LST");
         });
     }
 
-    /**
-     * A successfully parsed Python source file whose printing throws, simulating an RPC printing failure.
-     */
+    /// A successfully parsed Python source file whose printing throws, simulating an RPC printing failure.
     @SuppressWarnings("unchecked")
     private static class ThrowingPy implements Py, SourceFile {
         private final UUID id = Tree.randomId();
@@ -359,7 +356,7 @@ class LanguageCompositionTest implements RewriteTest {
 
         @Override
         public Path getSourcePath() {
-            return Paths.get("src/example.py");
+            return Path.of("src/example.py");
         }
 
         @Override
