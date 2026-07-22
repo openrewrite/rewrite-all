@@ -7,7 +7,7 @@ plugins {
 
 gradleEnterprise {
     val isCiServer = System.getenv("CI")?.equals("true") ?: false
-    server = "https://ge.openrewrite.org/"
+    server = "https://community.develocity.cloud/"
 
     buildCache {
         remote(gradleEnterprise.buildCache) {
