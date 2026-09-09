@@ -36,7 +36,7 @@ dependencies {
     implementation("org.openrewrite:rewrite-toml")
     implementation("org.openrewrite:rewrite-xml")
     implementation("org.openrewrite:rewrite-yaml")
-    implementation("org.openrewrite:rewrite-cobol:$latest")
+    implementation("org.openrewrite:rewrite-mainframe:$latest")
     implementation("org.openrewrite:rewrite-csharp:$latest")
     implementation("org.openrewrite:rewrite-javascript")
 

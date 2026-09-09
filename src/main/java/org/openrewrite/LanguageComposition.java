@@ -20,8 +20,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.binary.Binary;
-import org.openrewrite.cobol.tree.CobolPreprocessor;
-import org.openrewrite.controlm.tree.ControlM;
 import org.openrewrite.csharp.tree.Cs;
 import org.openrewrite.docker.tree.Docker;
 import org.openrewrite.groovy.tree.G;
@@ -29,9 +27,11 @@ import org.openrewrite.hcl.tree.Hcl;
 import org.openrewrite.internal.ExceptionUtils;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.javascript.tree.JS;
-import org.openrewrite.jcl.tree.Jcl;
 import org.openrewrite.json.tree.Json;
 import org.openrewrite.kotlin.tree.K;
+import org.openrewrite.mainframe.cobol.tree.CobolPreprocessor;
+import org.openrewrite.mainframe.controlm.tree.ControlM;
+import org.openrewrite.mainframe.jcl.tree.Jcl;
 import org.openrewrite.properties.tree.Properties;
 import org.openrewrite.protobuf.tree.Proto;
 import org.openrewrite.python.tree.Py;
@@ -163,7 +163,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
             return OTHER;
         } else if (s instanceof CobolPreprocessor.Copybook) {
             return "Copybook";
-        } else if (s.getClass().getName().startsWith("org.openrewrite.cobol.tree.Cobol")) { // Also CobolPreprocessor
+        } else if (s.getClass().getName().startsWith("org.openrewrite.mainframe.cobol.tree.Cobol")) { // Also CobolPreprocessor
             return "Cobol";
         } else if (s instanceof ControlM) {
             return "Control-M";
