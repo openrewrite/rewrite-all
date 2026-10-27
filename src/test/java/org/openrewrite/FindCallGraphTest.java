@@ -17,6 +17,7 @@ package org.openrewrite;
 
 import org.junit.jupiter.api.Test;
 import org.openrewrite.table.CallGraph;
+import org.openrewrite.table.LowConfidenceFiles;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 import org.openrewrite.test.TypeValidation;
@@ -50,6 +51,30 @@ class FindCallGraphTest implements RewriteTest {
                 String s = /*~~(Method type not found)~~>*/foo();
             }
             """
+          )
+        );
+    }
+
+    @Test
+    void lowConfidenceRecordedOncePerReasonInEachFile() {
+        rewriteRun(
+          spec -> spec.typeValidationOptions(TypeValidation.builder().methodInvocations(false).identifiers(false).build())
+            .dataTable(LowConfidenceFiles.Row.class, rows ->
+              assertThat(rows).containsExactly(new LowConfidenceFiles.Row("A.java", "call.methodType"))),
+          //language=java
+          java(
+            """
+              class A {
+                  String s = foo();
+                  String t = foo();
+              }
+              """,
+            """
+              class A {
+                  String s = /*~~(Method type not found)~~>*/foo();
+                  String t = /*~~(Method type not found)~~>*/foo();
+              }
+              """
           )
         );
     }

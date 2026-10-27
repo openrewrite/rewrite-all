@@ -70,7 +70,7 @@ public class FindCallGraph extends Recipe {
 
             /**
              * Mark the current source file as having an incomplete call graph. Deduped per
-             * (sourcePath, reason) within a single recipe run via an ExecutionContext bag,
+             * reason within each source file via a message on its cursor,
              * so a heavily-attributed file emits a few rows rather than thousands. Downstream
              * test selection treats any row for a file as "method-level reachability for this
              * file is unreliable -- escalate to module-coarse selection for any test module
@@ -82,10 +82,9 @@ public class FindCallGraph extends Recipe {
                     return;
                 }
                 String sourcePath = sf.getSourcePath().toString();
-                String dedupeKey = sourcePath + "::" + reason;
-                Set<String> recorded = ctx.computeMessageIfAbsent(
-                        "LOW_CONFIDENCE_RECORDED", k -> new HashSet<>());
-                if (recorded.add(dedupeKey)) {
+                Set<String> recorded = getCursor().dropParentUntil(SourceFile.class::isInstance)
+                        .computeMessageIfAbsent("LOW_CONFIDENCE_RECORDED", k -> new HashSet<>());
+                if (recorded.add(reason)) {
                     lowConfidenceFiles.insertRow(ctx, new LowConfidenceFiles.Row(sourcePath, reason));
                 }
             }
