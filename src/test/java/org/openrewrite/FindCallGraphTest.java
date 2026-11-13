@@ -38,7 +38,8 @@ class FindCallGraphTest implements RewriteTest {
     @Test
     void missingMethodMarked() {
         rewriteRun(
-          spec -> spec.typeValidationOptions(TypeValidation.none()),
+          // The input deliberately calls an undefined method, which the recipe marks
+          spec -> spec.typeValidationOptions(TypeValidation.all().methodInvocations(false)),
           //language=java
           java(
                 """
@@ -58,7 +59,8 @@ class FindCallGraphTest implements RewriteTest {
     @Test
     void lowConfidenceRecordedOncePerReasonInEachFile() {
         rewriteRun(
-          spec -> spec.typeValidationOptions(TypeValidation.builder().methodInvocations(false).identifiers(false).build())
+          // The input deliberately calls an undefined method, which the recipe marks
+          spec -> spec.typeValidationOptions(TypeValidation.all().methodInvocations(false))
             .dataTable(LowConfidenceFiles.Row.class, rows ->
               assertThat(rows).containsExactly(new LowConfidenceFiles.Row("A.java", "call.methodType"))),
           //language=java
