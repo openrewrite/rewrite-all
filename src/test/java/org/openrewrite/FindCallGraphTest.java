@@ -542,7 +542,7 @@ class FindCallGraphTest implements RewriteTest {
         rewriteRun(
           spec -> spec
             .recipe(new FindCallGraph(false))
-            .dataTable(CallGraph.Row.class, row -> {
+            .dataTable(CallGraph.Row.class, row ->
                 assertThat(row)
                         // Import -> class-level reference from the file to the imported class.
                         .contains(
@@ -575,8 +575,7 @@ class FindCallGraphTest implements RewriteTest {
                     CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
                     "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
                   )
-                );
-            }),
+                )),
           //language=java
           java(
                 """
@@ -605,15 +604,14 @@ class FindCallGraphTest implements RewriteTest {
         rewriteRun(
           spec -> spec
             .recipe(new FindCallGraph(false))
-            .dataTable(CallGraph.Row.class, row -> {
+            .dataTable(CallGraph.Row.class, row ->
                 assertThat(row).contains(
                   new CallGraph.Row(
                     "unknown", "Test", "check", "java.lang.Object",
                     CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
                     "other.Helper", "", "", CallGraph.ResourceType.CLASS, ""
                   )
-                );
-            }),
+                )),
           //language=java
           java(
                 """
@@ -647,7 +645,7 @@ class FindCallGraphTest implements RewriteTest {
         rewriteRun(
           spec -> spec
             .recipe(new FindCallGraph(false))
-            .dataTable(CallGraph.Row.class, row -> {
+            .dataTable(CallGraph.Row.class, row ->
                 assertThat(row)
                         // Class-level annotation: edge attributed to the class.
                         .contains(
@@ -679,8 +677,7 @@ class FindCallGraphTest implements RewriteTest {
                     CallGraph.ResourceType.METHOD, CallGraph.ResourceAction.REFERENCE,
                     "other.Other", "", "", CallGraph.ResourceType.CLASS, ""
                   )
-                );
-            }),
+                )),
           //language=java
           java(
                 """
