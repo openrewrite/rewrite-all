@@ -25,6 +25,7 @@ import org.openrewrite.docker.tree.Docker;
 import org.openrewrite.groovy.tree.G;
 import org.openrewrite.hcl.tree.Hcl;
 import org.openrewrite.internal.ExceptionUtils;
+import org.openrewrite.java.CountLinesVisitor;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.javascript.tree.JS;
 import org.openrewrite.json.tree.Json;
@@ -220,7 +221,7 @@ public class LanguageComposition extends ScanningRecipe<LanguageComposition.Accu
             case "Kotlin":
                 // Don't have a kotlin-specific counter yet and Java count should be very close
             case "Java":
-                return org.openrewrite.java.CountLinesVisitor.countLines(s);
+                return CountLinesVisitor.countLines(s);
             case "Groovy":
                 return org.openrewrite.groovy.CountLinesVisitor.countLines(s);
             case "Json":
